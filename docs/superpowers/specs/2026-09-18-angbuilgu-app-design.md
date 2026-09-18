@@ -276,53 +276,50 @@
 | 움직임 | 리애니메이티드 |
 | 위치와 방위 | 엑스포 위치 모듈 |
 | 기울기 | 엑스포 센서 모듈 |
-| 태양과 달 위치 | suncalc |
+| 태양과 달 위치 | 직접 구현 |
 | 적위와 균시차 | 직접 구현 |
 | 정확도 검증 | astronomy-engine, 개발 의존성으로만 사용 |
 | 테스트 | 엑스포 제스트 프리셋 |
 
-적위와 균시차를 직접 구현하는 이유는 suncalc가 이 값을 내보내지 않기 때문이다. 눈금을 그리려면 두 값이 반드시 필요하다.
+태양과 달의 위치를 직접 구현한다. 눈금을 그리려면 적위와 균시차가 반드시 필요한데 기존 라이브러리가 이 값을 내보내지 않는다. 계산식 자체는 짧고, 직접 두면 계산층에 바깥 의존성이 하나도 남지 않는다. 정확도는 astronomy-engine을 기준 삼아 테스트로 지킨다. 태양은 0.15도, 달은 0.5도 안쪽이다.
 
 ## 11. 모듈 구조
 
 ```
-app/
-  _layout.tsx
-  index.tsx              주화면
-  settings.tsx
-  help/
 src/
-  astro/
-    julian.ts
-    solar.ts             적위, 균시차, 시간각, 고도와 방위
-    lunar.ts             달 위치, 위상, 밝기
-  dial/
-    constants.ts         24절기 적위, 시각 라벨
-    geometry.ts          절기선과 시각선 경로
-    projection.ts        구면에서 평면으로
-    shadow.ts            그림자 끝 위치
-  time/
-    traditional.ts       96각법 변환
-    conversion.ts        진태양시와 표준시
-  placement/
-    useOrientation.ts    나침반과 기울기를 회전값으로
-    filter.ts            원형 평활
-  render/
-    Dial.tsx
-    Gnomon.tsx
-    ShadowLayer.tsx
-    SkyLayer.tsx
-  ui/
-    ReadingCard.tsx
-    AlignmentGuide.tsx
-    Tooltip.tsx
-  theme/
-    tokens.ts
-  state/
+  app/                   라우트만 둔다
+    _layout.tsx
+    index.tsx
+    settings.tsx
+    help.tsx
+  screens/
+    dial/                주화면 본체
+    settings/
+    help/                도움말과 절기 애니메이션
+  components/
+    dial/                반구, 눈금, 영침, 그림자, 하늘
+    reading-card.tsx
+    alignment-guide.tsx
+    info-tooltip.tsx
+    option-row.tsx
+    notice.tsx
+  hooks/
+    use-now.ts
+    use-location.ts
+    use-orientation.ts
+    use-settings.ts
+    use-dial-geometry.ts
+  lib/
+    astro/               율리우스일, 태양, 달
+    dial/                상수, 투영, 눈금 기하
+    time/                96각법, 표준시, 달시계 읽기
+    placement/           각도와 평활
     settings.ts
+    sundial.ts           화면이 쓸 상태를 한 번에 만든다
+  theme.ts
 ```
 
-astro, dial, time 세 디렉터리는 리액트를 쓰지 않는다. 함수만 내보내고 테스트로 전부 덮는다.
+`src/lib` 아래는 리액트를 쓰지 않는다. 함수만 내보내고 테스트로 전부 덮는다. 폴더 이름은 엑스포가 권하는 방식을 따라 소문자와 붙임표로 쓴다.
 
 ## 12. 테스트
 
