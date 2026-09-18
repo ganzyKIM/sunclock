@@ -24,6 +24,7 @@ npx expo start          # 개발 서버
 npx expo run:ios        # 아이폰 시뮬레이터 (Xcode 필요)
 npm test                # 단위 테스트
 npm run typecheck       # 타입 검사
+npm run render-dial     # 눈금을 SVG로 뽑아 눈으로 확인
 ```
 
 웹으로 보려면 `npx expo start --web`을 쓴다. 웹에서는 스킨이 쓰는 그래픽 엔진을

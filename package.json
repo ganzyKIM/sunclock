@@ -40,7 +40,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "render-dial": "jest --config jest.preview.config.js"
   },
   "private": true,
   "overrides": {
@@ -50,6 +51,9 @@
     "preset": "jest-expo",
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/.*|native-base|react-native-svg|@shopify/react-native-skia)"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/scripts/"
     ]
   }
 }

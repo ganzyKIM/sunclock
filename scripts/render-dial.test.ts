@@ -1,10 +1,10 @@
-import { writeFileSync } from "fs";
-import { buildDialGeometry, contiguousRuns, HANYANG_LATITUDE } from "./geometry";
-import { rodShadowPoints, shadowPoint } from "./projection";
-import { DAY_PALETTE, NIGHT_PALETTE, Palette } from "../../theme";
+import { mkdirSync, writeFileSync } from "fs";
+import { buildDialGeometry, contiguousRuns, HANYANG_LATITUDE } from "../src/lib/dial/geometry";
+import { rodShadowPoints, shadowPoint } from "../src/lib/dial/projection";
+import { DAY_PALETTE, NIGHT_PALETTE, Palette } from "../src/theme";
 
 const R = 300;
-const OUT = "/tmp/claude-501/-Users-dobedub-Desktop-sunclock/72c3442c-0ae9-4c5d-b257-427aef874f2a/scratchpad";
+const OUT = process.env.DIAL_OUT ?? "dial-preview";
 
 function poly(points: { x: number; y: number }[]): string {
   return points.map((p) => `${(p.x * R).toFixed(2)},${(p.y * R).toFixed(2)}`).join(" ");
@@ -62,7 +62,12 @@ function render(latitude: number, altitude: number, azimuth: number, p: Palette,
 </svg>`;
 }
 
+/**
+ * 눈금이 실물과 같은 모양으로 나오는지 눈으로 보려고 쓰는 도구다.
+ * `npm run render-dial`로 돌리면 SVG 세 장이 나온다.
+ */
 it("반구를 그림으로 뽑는다", () => {
+  mkdirSync(OUT, { recursive: true });
   writeFileSync(
     `${OUT}/dial-day.svg`,
     render(HANYANG_LATITUDE, 45, 225, DAY_PALETTE, "한양 위도 · 오후 해그림자")
