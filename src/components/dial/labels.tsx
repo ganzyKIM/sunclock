@@ -10,6 +10,9 @@ const BOX = 28;
 
 interface LabelsProps {
   geometry: DialGeometry;
+  /** 반구 중심의 화면 좌표. */
+  center: number;
+  /** 반구의 반지름. */
   radius: number;
   palette: Palette;
 }
@@ -19,7 +22,7 @@ interface LabelsProps {
  * 스킨에 글자를 그리려면 글꼴 파일이 있어야 하므로, 한글이 제대로 나오도록
  * 화면 글자를 반구 위에 겹쳐 놓는다.
  */
-export function DialLabels({ geometry, radius, palette }: LabelsProps) {
+export function DialLabels({ geometry, center, radius, palette }: LabelsProps) {
   const labels = useMemo(
     () =>
       geometry.hourLines
@@ -29,11 +32,11 @@ export function DialLabels({ geometry, radius, palette }: LabelsProps) {
           return {
             key: line.apparentMinutes,
             text: line.label as string,
-            left: radius + end.x * radius * INSET - BOX / 2,
-            top: radius + end.y * radius * INSET - BOX / 2,
+            left: center + end.x * radius * INSET - BOX / 2,
+            top: center + end.y * radius * INSET - BOX / 2,
           };
         }),
-    [geometry, radius]
+    [geometry, center, radius]
   );
 
   return (
