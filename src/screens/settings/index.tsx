@@ -1,0 +1,150 @@
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { Notice } from "../../components/notice";
+import { OptionRow } from "../../components/option-row";
+import { useLocation } from "../../hooks/use-location";
+import { useSettings } from "../../hooks/use-settings";
+import { Settings } from "../../lib/settings";
+import { DAY_PALETTE, FONT_SIZE, RADIUS, SPACING } from "../../theme";
+
+export function SettingsScreen() {
+  const router = useRouter();
+  const { settings, update } = useSettings();
+  const location = useLocation(settings.manualLocation);
+  const palette = DAY_PALETTE;
+
+  const [latitudeText, setLatitudeText] = useState(
+    settings.manualLocation ? String(settings.manualLocation.latitude) : ""
+  );
+  const [longitudeText, setLongitudeText] = useState(
+    settings.manualLocation ? String(settings.manualLocation.longitude) : ""
+  );
+
+  const applyManualLocation = () => {
+    const latitude = Number(latitudeText);
+    const longitude = Number(longitudeText);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+    if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return;
+    update({ manualLocation: { latitude, longitude } });
+  };
+
+  return (
+    <SafeAreaView style={[styles.screen, { backgroundColor: palette.background }]}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Pressable onPress={() => router.back()} accessibilityRole="button">
+          <Text style={[styles.back, { color: palette.accent }]}>← 돌아가기</Text>
+        </Pressable>
+
+        <OptionRow
+          title="눈금의 위도"
+          description={
+            "앙부일구는 만든 곳의 위도에 맞춰 눈금을 새겼어요. " +
+            "지금 있는 곳에 맞추면 어디서나 시각이 맞고, 한양 원본을 고르면 " +
+            "조선의 해시계를 그대로 볼 수 있어요."
+          }
+          options={[
+            { value: "device", label: "지금 있는 곳" },
+            { value: "hanyang", label: "한양 원본" },
+          ]}
+          value={settings.dialLatitude}
+          onChange={(value) => update({ dialLatitude: value as Settings["dialLatitude"] })}
+          palette={palette}
+        />
+
+        <OptionRow
+          title="밤에는"
+          description={
+            "해가 지면 달그림자로 시각을 읽을 수 있어요. " +
+            "달시계를 끄면 해가 뜰 때까지 남은 시간을 보여 줍니다."
+          }
+          options={[
+            { value: "moon", label: "달시계" },
+            { value: "wait", label: "해 기다리기" },
+          ]}
+          value={settings.nightMode}
+          onChange={(value) => update({ nightMode: value as Settings["nightMode"] })}
+          palette={palette}
+        />
+
+        <View style={[styles.box, { backgroundColor: palette.card }]}>
+          <Text style={[styles.title, { color: palette.text }]}>위치를 손으로 정하기</Text>
+          <Text style={[styles.description, { color: palette.textSoft }]}>
+            지금 위치는 북위 {location.latitude.toFixed(3)}도, 동경{" "}
+            {location.longitude.toFixed(3)}도예요.
+          </Text>
+          <View style={styles.inputs}>
+            <TextInput
+              value={latitudeText}
+              onChangeText={setLatitudeText}
+              placeholder="위도"
+              placeholderTextColor={palette.textSoft}
+              keyboardType="numbers-and-punctuation"
+              accessibilityLabel="위도"
+              style={[styles.input, { borderColor: palette.textSoft, color: palette.text }]}
+            />
+            <TextInput
+              value={longitudeText}
+              onChangeText={setLongitudeText}
+              placeholder="경도"
+              placeholderTextColor={palette.textSoft}
+              keyboardType="numbers-and-punctuation"
+              accessibilityLabel="경도"
+              style={[styles.input, { borderColor: palette.textSoft, color: palette.text }]}
+            />
+          </View>
+          <View style={styles.actions}>
+            <Pressable onPress={applyManualLocation} accessibilityRole="button">
+              <Text style={[styles.action, { color: palette.accent }]}>이 위치로 보기</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                update({ manualLocation: null });
+                setLatitudeText("");
+                setLongitudeText("");
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.action, { color: palette.textSoft }]}>
+                위성 위치로 되돌리기
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {location.permission === "denied" && !settings.manualLocation ? (
+          <Notice
+            title="위치를 알 수 없어요"
+            body={
+              "위치 권한이 없어 경복궁을 기준으로 보여 주고 있어요. " +
+              "위에서 위도와 경도를 직접 넣으면 그곳의 해시계를 볼 수 있습니다."
+            }
+            palette={palette}
+          />
+        ) : null}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  content: { padding: SPACING.xl, gap: SPACING.lg },
+  back: { fontSize: FONT_SIZE.body, fontWeight: "600" },
+  box: { borderRadius: RADIUS.lg, padding: SPACING.lg, gap: SPACING.sm },
+  title: { fontSize: FONT_SIZE.body, fontWeight: "700" },
+  description: { fontSize: FONT_SIZE.caption, lineHeight: 20 },
+  inputs: { flexDirection: "row", gap: SPACING.sm },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    fontSize: FONT_SIZE.body,
+  },
+  actions: { flexDirection: "row", justifyContent: "space-between", marginTop: SPACING.xs },
+  action: { fontSize: FONT_SIZE.caption, fontWeight: "600" },
+});
