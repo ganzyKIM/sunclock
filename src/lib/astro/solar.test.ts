@@ -147,3 +147,24 @@ describe("horizonHourAngle", () => {
     expect(horizonHourAngle(70, -23.44)).toBe(0);
   });
 });
+
+describe("solarElements의 황경", () => {
+  it("춘분에 0에 가깝다", () => {
+    const { apparentLongitude } = solarElements(new Date("2026-03-20T14:46:00Z"));
+    expect(Math.min(apparentLongitude, 360 - apparentLongitude)).toBeLessThan(0.2);
+  });
+
+  it("하지에 90도에 가깝다", () => {
+    const { apparentLongitude } = solarElements(new Date("2026-06-21T08:25:00Z"));
+    expect(apparentLongitude).toBeGreaterThan(89.5);
+    expect(apparentLongitude).toBeLessThan(90.5);
+  });
+
+  it("0 이상 360 미만이다", () => {
+    for (const iso of ["2026-01-01T00:00:00Z", "2026-08-01T00:00:00Z"]) {
+      const { apparentLongitude } = solarElements(new Date(iso));
+      expect(apparentLongitude).toBeGreaterThanOrEqual(0);
+      expect(apparentLongitude).toBeLessThan(360);
+    }
+  });
+});
