@@ -125,7 +125,7 @@ export function buildDialGeometry(latitude: number): DialGeometry {
 
   return {
     latitude,
-    gnomonRoot: gnomonRootPoint(latitude, DIAL_FRAME_HEADING),
+    gnomonRoot: gnomonRootPoint(latitude),
     solarTermLines,
     hourLines,
   };

@@ -114,12 +114,12 @@ describe("shadowPoint", () => {
 
 describe("gnomonRootPoint", () => {
   it("한양 위도에서 남쪽 가장자리로부터 지름의 0.104만큼 떨어진다", () => {
-    const point = gnomonRootPoint(HANYANG_LATITUDE, 0);
+    const point = gnomonRootPoint(HANYANG_LATITUDE);
     expect(southRimDistanceInDiameters(point)).toBeCloseTo(0.1045, 3);
   });
 
   it("자오선 위에 있다", () => {
-    expect(gnomonRootPoint(HANYANG_LATITUDE, 0).x).toBeCloseTo(0, 9);
+    expect(gnomonRootPoint(HANYANG_LATITUDE).x).toBeCloseTo(0, 9);
   });
 });
 
@@ -127,5 +127,78 @@ describe("southRimDistanceInDiameters", () => {
   it("남쪽 가장자리가 0이고 북쪽 가장자리가 1이다", () => {
     expect(southRimDistanceInDiameters({ x: 0, y: 1 })).toBeCloseTo(0, 9);
     expect(southRimDistanceInDiameters({ x: 0, y: -1 })).toBeCloseTo(1, 9);
+  });
+});
+
+import { horizonDirection, rodShadowPoints, scalePoint } from "./projection";
+
+describe("rodShadowPoints", () => {
+  const latitude = 37.653;
+
+  it("첫 점이 영침 뿌리이고 끝 점이 그림자 끝이다", () => {
+    const points = rodShadowPoints(latitude, 40, 200, 0);
+    const root = gnomonRootPoint(latitude);
+    const tip = shadowPoint(40, 200, 0);
+    expect(points[0].x).toBeCloseTo(root.x, 9);
+    expect(points[0].y).toBeCloseTo(root.y, 9);
+    expect(points[points.length - 1].x).toBeCloseTo(tip.x, 9);
+    expect(points[points.length - 1].y).toBeCloseTo(tip.y, 9);
+  });
+
+  it("표본 수만큼 점을 낸다", () => {
+    expect(rodShadowPoints(latitude, 40, 200, 0, 16)).toHaveLength(16);
+  });
+
+  it("모든 점이 원판 안에 있다", () => {
+    for (const point of rodShadowPoints(latitude, 12, 95, 0, 40)) {
+      expect(Math.hypot(point.x, point.y)).toBeLessThanOrEqual(1.000001);
+    }
+  });
+
+  it("정오에는 자오선 위의 곧은 선이 된다", () => {
+    for (const point of rodShadowPoints(latitude, 52.35, 180, 0, 20)) {
+      expect(Math.abs(point.x)).toBeLessThan(1e-9);
+    }
+  });
+
+  it("반구를 돌리면 함께 돈다", () => {
+    const straight = rodShadowPoints(latitude, 30, 150, 0, 8);
+    const turned = rodShadowPoints(latitude, 30, 180, 30, 8);
+    straight.forEach((point, index) => {
+      expect(turned[index].x).toBeCloseTo(point.x, 9);
+      expect(turned[index].y).toBeCloseTo(point.y, 9);
+    });
+  });
+});
+
+describe("scalePoint", () => {
+  it("반지름을 곱한다", () => {
+    expect(scalePoint({ x: 0.5, y: -0.25 }, 120)).toEqual({ x: 60, y: -30 });
+  });
+});
+
+describe("horizonDirection", () => {
+  it("북쪽은 위쪽이다", () => {
+    const d = horizonDirection(0, 0);
+    expect(d.x).toBeCloseTo(0, 9);
+    expect(d.y).toBeCloseTo(-1, 9);
+  });
+
+  it("동쪽은 오른쪽이다", () => {
+    expect(horizonDirection(90, 0).x).toBeCloseTo(1, 9);
+  });
+
+  it("반구를 돌리면 함께 돈다", () => {
+    const a = horizonDirection(120, 0);
+    const b = horizonDirection(150, 30);
+    expect(b.x).toBeCloseTo(a.x, 9);
+    expect(b.y).toBeCloseTo(a.y, 9);
+  });
+
+  it("언제나 단위 길이다", () => {
+    for (const azimuth of [0, 37, 180, 300]) {
+      const d = horizonDirection(azimuth, 17);
+      expect(Math.hypot(d.x, d.y)).toBeCloseTo(1, 9);
+    }
   });
 });
