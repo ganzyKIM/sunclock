@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "앙부일구",
+    "slug": "angbuilgu",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMotionUsageDescription": "휴대폰이 평평하게 놓였는지 확인하는 데 씁니다."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "지금 있는 곳의 해 위치를 계산해 그림자를 그리는 데 씁니다."
+        }
+      ]
+    ],
+    "scheme": "angbuilgu"
+  }
+}
