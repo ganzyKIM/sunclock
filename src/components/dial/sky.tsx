@@ -21,8 +21,8 @@ interface SkyProps extends SkyContent {
 
 const RING = 1.18;
 const STAR_COUNT = 40;
-/** 이보다 더 내려가면 하늘에서 지운다. 박명이 끝나는 높이다. */
-const HIDE_BELOW = -6;
+/** 지평선 아래로 내려가면 하늘에서 지운다. 해시계는 떠 있는 빛만 센다. */
+const HORIZON = 0;
 
 /** 해와 달을 실제 방위에 맞춰 반구 바깥에 띄운다. 그림자가 왜 저쪽으로 뻗는지 보인다. */
 export function Sky({
@@ -70,7 +70,7 @@ export function Sky({
           ))
         : null}
 
-      {sunAltitude > HIDE_BELOW ? (
+      {sunAltitude > HORIZON ? (
         <>
           <Circle
             cx={sun.x * RING * radius}
@@ -88,7 +88,7 @@ export function Sky({
         </>
       ) : null}
 
-      {moonAltitude > HIDE_BELOW ? (
+      {moonAltitude > HORIZON ? (
         <>
           <Circle
             cx={moon.x * RING * radius}

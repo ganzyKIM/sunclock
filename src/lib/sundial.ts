@@ -96,7 +96,7 @@ export function buildSundialState(input: SundialInput): SundialState {
         notices.push("달이 태양보다 높거나 낮게 지나가 그림자가 절기선 밖으로 나갔어요.");
       }
     } else if (moon.position.altitude < 0) {
-      notices.push("달이 아직 뜨지 않았어요.");
+      notices.push("달이 지평선 아래에 있어요.");
     } else {
       notices.push(`${moon.phaseName}이라 달빛이 약해 그림자가 생기지 않아요.`);
     }

@@ -1,15 +1,11 @@
-import { Canvas, Group } from "@shopify/react-native-skia";
 import { View } from "react-native";
 
-import { DialGeometry } from "../../lib/dial/geometry";
-import { DialPoint } from "../../lib/dial/projection";
-import { Palette } from "../../theme";
-import { Bowl } from "./bowl";
-import { Gnomon } from "./gnomon";
-import { Grid } from "./grid";
+import type { DialGeometry } from "../../lib/dial/geometry";
+import type { DialPoint } from "../../lib/dial/projection";
+import type { Palette } from "../../theme";
+import { DialCanvasHost } from "./canvas-host";
 import { DialLabels } from "./labels";
-import { Shadow } from "./shadow";
-import { Sky, SkyContent } from "./sky";
+import type { SkyContent } from "./sky";
 
 export interface DialProps {
   geometry: DialGeometry;
@@ -38,31 +34,21 @@ export function Dial({
   sky,
 }: DialProps) {
   const center = size / 2;
-  const bowlRadius = center * (sky ? BOWL_SHARE_WITH_SKY : BOWL_SHARE_ALONE);
+  const radius = center * (sky ? BOWL_SHARE_WITH_SKY : BOWL_SHARE_ALONE);
 
   return (
     <View style={{ width: size, height: size }}>
-      <Canvas style={{ width: size, height: size }}>
-        <Group transform={[{ translateX: center }, { translateY: center }]}>
-          {sky ? <Sky {...sky} radius={bowlRadius} palette={palette} /> : null}
-          <Bowl radius={bowlRadius} palette={palette} />
-          <Grid geometry={geometry} radius={bowlRadius} palette={palette} />
-          <Gnomon root={geometry.gnomonRoot} radius={bowlRadius} palette={palette} />
-          <Shadow
-            points={rodShadow}
-            tip={shadow}
-            radius={bowlRadius}
-            palette={palette}
-            glowing={glowing}
-          />
-        </Group>
-      </Canvas>
-      <DialLabels
+      <DialCanvasHost
         geometry={geometry}
-        center={center}
-        radius={bowlRadius}
+        shadow={shadow}
+        rodShadow={rodShadow}
         palette={palette}
+        size={size}
+        radius={radius}
+        glowing={glowing}
+        sky={sky}
       />
+      <DialLabels geometry={geometry} center={center} radius={radius} palette={palette} />
     </View>
   );
 }

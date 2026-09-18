@@ -70,9 +70,12 @@ export function useOrientation(): OrientationState {
 
   useEffect(() => {
     let subscription: { remove: () => void } | undefined;
+    let available = false;
+    let cancelled = false;
 
+    /** 기울기 센서가 없는 기기도 있다. 없으면 수평으로 놓인 것으로 본다. */
     const start = () => {
-      if (subscription) return;
+      if (subscription || !available) return;
       DeviceMotion.setUpdateInterval(MOTION_INTERVAL_MS);
       subscription = DeviceMotion.addListener(({ rotation }) => {
         if (!rotation) return;
@@ -90,13 +93,22 @@ export function useOrientation(): OrientationState {
       subscription = undefined;
     };
 
-    start();
     const appState = AppState.addEventListener("change", (status) => {
       if (status === "active") start();
       else stop();
     });
 
+    (async () => {
+      try {
+        available = await DeviceMotion.isAvailableAsync();
+      } catch {
+        available = false;
+      }
+      if (!cancelled) start();
+    })();
+
     return () => {
+      cancelled = true;
       stop();
       appState.remove();
     };

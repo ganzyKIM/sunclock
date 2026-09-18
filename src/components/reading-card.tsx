@@ -12,10 +12,14 @@ interface ReadingCardProps {
 
 /** 큰 글씨는 쉬운 말로, 작은 글씨는 전통 시각으로 적는다. */
 export function ReadingCard({ state, palette }: ReadingCardProps) {
+  /** 그림자가 없으면 그림자가 가리키는 시각도 말하지 않는다. */
   const shadowMinutes =
-    state.mode === "moon" && state.moonReading
-      ? state.moonReading.correctedMinutes
-      : state.apparentMinutes;
+    state.shadow === null
+      ? null
+      : state.mode === "moon" && state.moonReading
+        ? state.moonReading.correctedMinutes
+        : state.apparentMinutes;
+  const shadowName = state.mode === "moon" ? "달그림자" : "해그림자";
 
   return (
     <View style={[styles.card, { backgroundColor: palette.card }]}>
@@ -44,8 +48,11 @@ export function ReadingCard({ state, palette }: ReadingCardProps) {
 
       <View style={styles.row}>
         <Text style={[styles.detail, { color: palette.textSoft }]}>
-          해그림자 {formatClockTime(shadowMinutes)} · 시계{" "}
-          {formatClockTime(state.standardMinutes)}
+          {shadowMinutes === null
+            ? `시계 ${formatClockTime(state.standardMinutes)}`
+            : `${shadowName} ${formatClockTime(shadowMinutes)} · 시계 ${formatClockTime(
+                state.standardMinutes
+              )}`}
         </Text>
         <InfoTooltip
           label="왜 다를까"

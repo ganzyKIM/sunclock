@@ -131,14 +131,17 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { padding: SPACING.xl, gap: SPACING.lg },
+  content: { padding: SPACING.xl, gap: SPACING.lg, width: "100%" },
   back: { fontSize: FONT_SIZE.body, fontWeight: "600" },
-  box: { borderRadius: RADIUS.lg, padding: SPACING.lg, gap: SPACING.sm },
+  box: { borderRadius: RADIUS.lg, padding: SPACING.lg, gap: SPACING.sm, width: "100%" },
   title: { fontSize: FONT_SIZE.body, fontWeight: "700" },
   description: { fontSize: FONT_SIZE.caption, lineHeight: 20 },
-  inputs: { flexDirection: "row", gap: SPACING.sm },
+  inputs: { flexDirection: "row", gap: SPACING.sm, width: "100%" },
   input: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minWidth: 0,
     borderWidth: 1,
     borderRadius: RADIUS.sm,
     paddingHorizontal: SPACING.md,

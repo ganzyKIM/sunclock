@@ -52,7 +52,7 @@ export function OptionRow({
 }
 
 const styles = StyleSheet.create({
-  box: { borderRadius: RADIUS.lg, padding: SPACING.lg, gap: SPACING.sm },
+  box: { borderRadius: RADIUS.lg, padding: SPACING.lg, gap: SPACING.sm, width: "100%" },
   title: { fontSize: FONT_SIZE.body, fontWeight: "700" },
   description: { fontSize: FONT_SIZE.caption, lineHeight: 20 },
   options: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.xs, flexWrap: "wrap" },

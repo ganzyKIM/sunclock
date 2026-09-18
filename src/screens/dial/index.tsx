@@ -65,33 +65,35 @@ export function DialScreen() {
 
       {isSupportedLatitude(location.latitude) ? (
         <>
-          <Dial
-            geometry={geometry}
-            shadow={state.shadow}
-            rodShadow={rodShadow}
-            palette={palette}
-            size={size}
-            glowing={orientation.isAligned}
-            sky={{
-              sunAltitude: state.sun.altitude,
-              sunAzimuth: state.sun.azimuth,
-              moonAltitude: state.moon.position.altitude,
-              moonAzimuth: state.moon.position.azimuth,
-              moonFraction: state.moon.illuminatedFraction,
-              heading,
-              night: state.mode !== "sun",
-            }}
-          />
+          <View style={styles.stage}>
+            <Dial
+              geometry={geometry}
+              shadow={state.shadow}
+              rodShadow={rodShadow}
+              palette={palette}
+              size={size}
+              glowing={orientation.isAligned}
+              sky={{
+                sunAltitude: state.sun.altitude,
+                sunAzimuth: state.sun.azimuth,
+                moonAltitude: state.moon.position.altitude,
+                moonAzimuth: state.moon.position.azimuth,
+                moonFraction: state.moon.illuminatedFraction,
+                heading,
+                night: state.mode !== "sun",
+              }}
+            />
 
-          <AlignmentGuide
-            headingDegrees={orientation.headingDegrees}
-            isAligned={orientation.isAligned}
-            isFlat={orientation.isFlat}
-            tiltDegrees={orientation.tiltDegrees}
-            accuracy={orientation.accuracy}
-            compassAvailable={orientation.compassAvailable}
-            palette={palette}
-          />
+            <AlignmentGuide
+              headingDegrees={orientation.headingDegrees}
+              isAligned={orientation.isAligned}
+              isFlat={orientation.isFlat}
+              tiltDegrees={orientation.tiltDegrees}
+              accuracy={orientation.accuracy}
+              compassAvailable={orientation.compassAvailable}
+              palette={palette}
+            />
+          </View>
 
           <ReadingCard state={state} palette={palette} />
         </>
@@ -114,10 +116,17 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.lg,
     gap: SPACING.md,
+  },
+  /** 반구와 안내를 가운데 모으고, 읽기 카드는 아래에 붙인다. */
+  stage: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.lg,
   },
   header: {
     width: "100%",
