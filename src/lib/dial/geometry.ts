@@ -106,6 +106,32 @@ function buildHourLine(minutes: number, latitude: number): HourLine | null {
   };
 }
 
+/**
+ * 이어진 토막끼리만 묶는다. 하지선처럼 시각선 범위를 양 끝에서 넘는 선은
+ * 넘는 구간이 좌우 두 토막이므로, 한 줄로 이으면 그릇을 가로지르는 금이 생긴다.
+ */
+export function contiguousRuns(
+  points: CurvePoint[],
+  insideHourRange: boolean
+): DialPoint[][] {
+  const runs: DialPoint[][] = [];
+  let current: DialPoint[] | null = null;
+
+  for (const point of points) {
+    if (point.insideHourRange === insideHourRange) {
+      if (!current) {
+        current = [];
+        runs.push(current);
+      }
+      current.push({ x: point.x, y: point.y });
+    } else {
+      current = null;
+    }
+  }
+
+  return runs.filter((run) => run.length > 1);
+}
+
 export function buildDialGeometry(latitude: number): DialGeometry {
   const solarTermLines: SolarTermLine[] = [];
   for (const group of SOLAR_TERM_GROUPS) {

@@ -107,3 +107,40 @@ describe("buildDialGeometry", () => {
     expect(high).toBeGreaterThan(low);
   });
 });
+
+import { contiguousRuns, CurvePoint } from "./geometry";
+
+function curve(flags: boolean[]): CurvePoint[] {
+  return flags.map((insideHourRange, i) => ({ x: i, y: 0, insideHourRange }));
+}
+
+describe("contiguousRuns", () => {
+  it("이어진 토막만 한 줄로 묶는다", () => {
+    const runs = contiguousRuns(curve([false, false, true, true, true, false, false]), true);
+    expect(runs).toHaveLength(1);
+    expect(runs[0].map((p) => p.x)).toEqual([2, 3, 4]);
+  });
+
+  it("양 끝으로 나뉜 토막을 따로 낸다", () => {
+    const runs = contiguousRuns(curve([false, false, true, true, false, false]), false);
+    expect(runs).toHaveLength(2);
+    expect(runs[0].map((p) => p.x)).toEqual([0, 1]);
+    expect(runs[1].map((p) => p.x)).toEqual([4, 5]);
+  });
+
+  it("점이 하나뿐인 토막은 버린다", () => {
+    expect(contiguousRuns(curve([true, false, true]), true)).toHaveLength(0);
+  });
+
+  it("하지선의 바깥 구간이 두 토막으로 나뉜다", () => {
+    const summer = geometry.solarTermLines.find((l) => l.declination > 23)!;
+    expect(contiguousRuns(summer.points, false)).toHaveLength(2);
+    expect(contiguousRuns(summer.points, true)).toHaveLength(1);
+  });
+
+  it("춘추분선은 바깥 구간이 없다", () => {
+    const equinox = geometry.solarTermLines.find((l) => Math.abs(l.declination) < 0.01)!;
+    expect(contiguousRuns(equinox.points, false)).toHaveLength(0);
+    expect(contiguousRuns(equinox.points, true)).toHaveLength(1);
+  });
+});
