@@ -37,6 +37,12 @@ npx expo prebuild --platform android --clean
 cd android && ./gradlew assembleRelease
 ```
 
+만든 APK를 휴대폰으로 옮기려면, 같은 와이파이에서 잠깐 열어 두면 된다.
+
+```bash
+./scripts/serve-apk.sh
+```
+
 웹으로 보려면 `npx expo start --web`을 쓴다. 웹에서는 스킨이 쓰는 그래픽 엔진을
 `public/canvaskit.wasm`에서 내려받는다.
 
