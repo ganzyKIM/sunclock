@@ -12,6 +12,7 @@
     "expo-location": "~57.0.19",
     "expo-router": "~57.0.22",
     "expo-sensors": "~57.0.3",
+    "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -41,7 +42,8 @@
     "web": "expo start --web",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "render-dial": "jest --config jest.preview.config.js"
+    "render-dial": "jest --config jest.preview.config.js",
+    "render-art": "jest --config jest.preview.config.js -t \"눈금 좌표\" && python3 scripts/render_art.py"
   },
   "private": true,
   "overrides": {

@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AlignmentGuide } from "../../components/alignment-guide";
@@ -16,10 +16,16 @@ import { dialLatitudeOf, isSupportedLatitude } from "../../lib/settings";
 import { buildSundialState } from "../../lib/sundial";
 import { FONT_SIZE, SPACING, themeAt } from "../../theme";
 
-const MAX_DIAL_SIZE = 400;
+/**
+ * 반구의 크기는 폭과 높이 둘 다에서 정한다.
+ * 폭만 보면 세로로 긴 화면에서 빈 자리가 커지고,
+ * 높이를 안 보면 작은 화면에서 읽기 카드를 밀어낸다.
+ */
+const MAX_DIAL_SIZE = 460;
+const DIAL_HEIGHT_SHARE = 0.46;
 
 export function DialScreen() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const now = useNow();
   const { settings } = useSettings();
   const location = useLocation(settings.manualLocation);
@@ -40,7 +46,11 @@ export function DialScreen() {
   });
 
   const palette = themeAt(state.sun.altitude);
-  const size = Math.min(width - SPACING.xl * 2, MAX_DIAL_SIZE);
+  const size = Math.min(
+    width - SPACING.lg * 2,
+    height * DIAL_HEIGHT_SHARE,
+    MAX_DIAL_SIZE
+  );
 
   const light = state.mode === "moon" ? state.moon.position : state.sun;
   const rodShadow = state.shadow
@@ -63,51 +73,57 @@ export function DialScreen() {
         </View>
       </View>
 
-      {isSupportedLatitude(location.latitude) ? (
-        <>
-          <View style={styles.stage}>
-            <Dial
-              geometry={geometry}
-              shadow={state.shadow}
-              rodShadow={rodShadow}
-              palette={palette}
-              size={size}
-              glowing={orientation.isAligned}
-              sky={{
-                sunAltitude: state.sun.altitude,
-                sunAzimuth: state.sun.azimuth,
-                moonAltitude: state.moon.position.altitude,
-                moonAzimuth: state.moon.position.azimuth,
-                moonFraction: state.moon.illuminatedFraction,
-                heading,
-                night: state.mode !== "sun",
-              }}
-            />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {isSupportedLatitude(location.latitude) ? (
+          <>
+            <View style={styles.stage}>
+              <Dial
+                geometry={geometry}
+                shadow={state.shadow}
+                rodShadow={rodShadow}
+                palette={palette}
+                size={size}
+                glowing={orientation.isAligned}
+                sky={{
+                  sunAltitude: state.sun.altitude,
+                  sunAzimuth: state.sun.azimuth,
+                  moonAltitude: state.moon.position.altitude,
+                  moonAzimuth: state.moon.position.azimuth,
+                  moonFraction: state.moon.illuminatedFraction,
+                  heading,
+                  night: state.mode !== "sun",
+                }}
+              />
 
-            <AlignmentGuide
-              headingDegrees={orientation.headingDegrees}
-              isAligned={orientation.isAligned}
-              isFlat={orientation.isFlat}
-              tiltDegrees={orientation.tiltDegrees}
-              accuracy={orientation.accuracy}
-              compassAvailable={orientation.compassAvailable}
-              palette={palette}
-            />
-          </View>
+              <AlignmentGuide
+                headingDegrees={orientation.headingDegrees}
+                isAligned={orientation.isAligned}
+                isFlat={orientation.isFlat}
+                tiltDegrees={orientation.tiltDegrees}
+                accuracy={orientation.accuracy}
+                compassAvailable={orientation.compassAvailable}
+                palette={palette}
+              />
+            </View>
 
-          <ReadingCard state={state} palette={palette} />
-        </>
-      ) : (
-        <Notice
-          title="이곳에서는 앙부일구를 쓸 수 없어요"
-          body={
-            "앙부일구는 북반구의 중위도에서 쓰던 해시계예요. " +
-            "북위 0도에서 66도 사이에서만 눈금이 제대로 그려집니다. " +
-            "설정에서 위치를 손으로 정하면 다른 곳의 해시계를 볼 수 있어요."
-          }
-          palette={palette}
-        />
-      )}
+            <ReadingCard state={state} palette={palette} />
+          </>
+        ) : (
+          <Notice
+            title="이곳에서는 앙부일구를 쓸 수 없어요"
+            body={
+              "앙부일구는 북반구의 중위도에서 쓰던 해시계예요. " +
+              "북위 0도에서 66도 사이에서만 눈금이 제대로 그려집니다. " +
+              "설정에서 위치를 손으로 정하면 다른 곳의 해시계를 볼 수 있어요."
+            }
+            palette={palette}
+          />
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -120,13 +136,22 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
     gap: SPACING.md,
   },
-  /** 반구와 안내를 가운데 모으고, 읽기 카드는 아래에 붙인다. */
+  scroll: { width: "100%" },
+  /** 화면이 넉넉하면 가운데에 모이고, 모자라면 스크롤된다. */
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.md,
+    paddingBottom: SPACING.lg,
+  },
   stage: {
-    flex: 1,
+    flexGrow: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
     gap: SPACING.lg,
+    paddingVertical: SPACING.md,
   },
   header: {
     width: "100%",
