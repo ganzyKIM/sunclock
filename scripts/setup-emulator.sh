@@ -16,6 +16,14 @@ AVD="${AVD:-angbuilgu_tall}"
 IMAGE="${IMAGE:-system-images;android-36;google_apis;arm64-v8a}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# 내려받다 만 이미지는 폴더만 있고 알맹이가 없다. 폴더 존재만 보면 속는다.
+IMAGE_DIR="$ANDROID_HOME/system-images/${IMAGE//;//}"
+if [ ! -f "$IMAGE_DIR/system.img" ] && [ ! -f "$IMAGE_DIR/userdata.img" ]; then
+  echo "시스템 이미지가 없습니다. 먼저 받으세요:"
+  echo "  sdkmanager --sdk_root=\"$ANDROID_HOME\" \"$IMAGE\""
+  exit 1
+fi
+
 if ! avdmanager list avd 2>/dev/null | grep -q "Name: $AVD"; then
   echo "가상 기기를 만듭니다: $AVD"
   echo "no" | avdmanager create avd --name "$AVD" --package "$IMAGE" --device "pixel_7" --force >/dev/null
