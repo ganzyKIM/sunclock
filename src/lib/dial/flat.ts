@@ -1,15 +1,7 @@
 import { horizonHourAngle } from "../astro/solar";
 import { toRadians } from "../placement/angle";
-import {
-  HOUR_LINE_END_MINUTES,
-  HOUR_LINE_START_MINUTES,
-  HOUR_LINE_STEP_MINUTES,
-  MAJOR_HOUR_MINUTES,
-  OBLIQUITY,
-  SOLAR_TERM_GROUPS,
-  SolarTermGroup,
-  majorHourLabel,
-} from "./constants";
+import { BRANCH_NAMES } from "../time/traditional";
+import { OBLIQUITY, SOLAR_TERM_GROUPS, SolarTermGroup } from "./constants";
 import { DialPoint } from "./projection";
 
 /**
@@ -17,10 +9,11 @@ import { DialPoint } from "./projection";
  *
  * 영침은 천구 북극을 향하므로, 그 축에서 내려다보면 영침은 한가운데 점이 되고
  * 그림자는 거기서 뻗어 나가는 바늘이 된다. 시각선은 사방으로 퍼지는 곧은 선,
- * 절기선은 동심원이 된다. 반구에서는 아래쪽 절반이 늘 비어 있었지만
- * 이 원반은 눈금이 고루 퍼져 한눈에 들어온다.
+ * 절기선은 동심원이 된다.
  *
- * 각도는 그대로 시간각이다. 반지름만 보기 좋게 늘여 가운데에 영침 자리를 둔다.
+ * 각도는 그대로 시간각이다. 열두 시를 모두 새겨 원을 한 바퀴 채운다.
+ * 낮에는 위쪽 절반을 해그림자가 쓰고, 밤에는 아래쪽을 달그림자가 쓴다.
+ * 반지름만 보기 좋게 늘여 가운데에 영침 자리를 둔다.
  */
 
 /** 영침이 앉을 가운데 자리. */
@@ -28,13 +21,17 @@ export const INNER_RADIUS = 0.32;
 /** 동지선이 놓이는 바깥 자리. */
 export const OUTER_RADIUS = 0.95;
 
-/** 극에서 떨어진 각도. 하지가 가장 작고 동지가 가장 크다. */
-function polarDistance(declination: number): number {
-  return 90 - declination;
-}
+/** 시각선은 30분마다 하나씩, 하루를 한 바퀴 돈다. */
+export const HOUR_STEP_MINUTES = 30;
+/** 주선은 각 시의 정에 놓인다. 두 시간마다 하나씩 열둘이다. */
+export const MAJOR_STEP_MINUTES = 120;
+
+const MINUTES_PER_DAY = 1440;
+const DECLINATION_SAMPLES = 121;
 
 export function radiusFor(declination: number): number {
-  const t = (polarDistance(declination) - (90 - OBLIQUITY)) / (2 * OBLIQUITY);
+  // 극에서 떨어진 각도. 하지가 가장 작고 동지가 가장 크다.
+  const t = (90 - declination - (90 - OBLIQUITY)) / (2 * OBLIQUITY);
   return INNER_RADIUS + (OUTER_RADIUS - INNER_RADIUS) * t;
 }
 
@@ -52,18 +49,19 @@ export interface FlatTermArc {
   radius: number;
   /** 해가 뜨고 지는 시간각. 이 폭이 곧 그날의 낮 길이다. */
   halfDayAngle: number;
-  /** 시각선이 덮는 범위를 넘는지. 여름에는 넘는다. */
-  exceedsHourRange: boolean;
 }
 
 export interface FlatHourLine {
   hourAngle: number;
   apparentMinutes: number;
   isMajor: boolean;
+  /** 주선에만 붙는 12지 이름. */
   label: string | null;
-  /** 해가 떠 있는 구간만 남긴 안쪽 끝과 바깥쪽 끝. */
+  /** 눈금이 그려지는 구간. 안쪽 끝과 바깥쪽 끝이다. */
   from: DialPoint;
   to: DialPoint;
+  /** 그중 해가 떠 있을 수 있는 구간. 밤 시각선에는 없다. */
+  daylight: { from: DialPoint; to: DialPoint } | null;
 }
 
 export interface FlatGeometry {
@@ -72,66 +70,63 @@ export interface FlatGeometry {
   hourLines: FlatHourLine[];
 }
 
-const HOUR_ANGLE_START = HOUR_LINE_START_MINUTES / 4 - 180;
-const HOUR_ANGLE_END = HOUR_LINE_END_MINUTES / 4 - 180;
-const DECLINATION_SAMPLES = 61;
-
-function buildTermArc(group: SolarTermGroup, latitude: number): FlatTermArc | null {
-  const halfDayAngle = horizonHourAngle(latitude, group.declination);
-  if (halfDayAngle <= 0) return null;
-
+function buildTermArc(group: SolarTermGroup, latitude: number): FlatTermArc {
   return {
     declination: group.declination,
     label: group.label,
     termNames: group.terms.map((t) => t.name),
     radius: radiusFor(group.declination),
-    halfDayAngle,
-    exceedsHourRange: halfDayAngle > HOUR_ANGLE_END,
+    halfDayAngle: horizonHourAngle(latitude, group.declination),
   };
 }
 
-function buildHourLine(minutes: number, latitude: number): FlatHourLine | null {
-  const hourAngle = minutes / 4 - 180;
+/** 그 시각에 해가 떠 있을 수 있는 적위 구간을 찾는다. */
+function daylightRange(
+  hourAngle: number,
+  latitude: number
+): { low: number; high: number } | null {
+  let low: number | null = null;
+  let high: number | null = null;
 
-  let lowest: number | null = null;
-  let highest: number | null = null;
   for (let i = 0; i < DECLINATION_SAMPLES; i += 1) {
     const declination = -OBLIQUITY + (2 * OBLIQUITY * i) / (DECLINATION_SAMPLES - 1);
     if (Math.abs(hourAngle) > horizonHourAngle(latitude, declination)) continue;
-    if (lowest === null) lowest = declination;
-    highest = declination;
+    if (low === null) low = declination;
+    high = declination;
   }
-  if (lowest === null || highest === null || lowest === highest) return null;
+
+  return low === null || high === null || low === high ? null : { low, high };
+}
+
+function buildHourLine(minutes: number, latitude: number): FlatHourLine {
+  const hourAngle = minutes / 4 - 180;
+  const range = daylightRange(hourAngle, latitude);
+  const branchIndex = minutes / MAJOR_STEP_MINUTES;
+  const isMajor = minutes % MAJOR_STEP_MINUTES === 0;
 
   return {
     hourAngle,
     apparentMinutes: minutes,
-    isMajor: MAJOR_HOUR_MINUTES.includes(minutes),
-    label: majorHourLabel(minutes),
-    // 적위가 클수록 안쪽이다.
-    from: flatPoint(hourAngle, highest),
-    to: flatPoint(hourAngle, lowest),
+    isMajor,
+    label: isMajor ? BRANCH_NAMES[branchIndex] : null,
+    from: flatPoint(hourAngle, OBLIQUITY),
+    to: flatPoint(hourAngle, -OBLIQUITY),
+    daylight: range
+      ? {
+          from: flatPoint(hourAngle, range.high),
+          to: flatPoint(hourAngle, range.low),
+        }
+      : null,
   };
 }
 
 export function buildFlatGeometry(latitude: number): FlatGeometry {
-  const termArcs: FlatTermArc[] = [];
-  for (const group of SOLAR_TERM_GROUPS) {
-    const arc = buildTermArc(group, latitude);
-    if (arc) termArcs.push(arc);
-  }
+  const termArcs = SOLAR_TERM_GROUPS.map((group) => buildTermArc(group, latitude));
 
   const hourLines: FlatHourLine[] = [];
-  for (
-    let minutes = HOUR_LINE_START_MINUTES;
-    minutes <= HOUR_LINE_END_MINUTES;
-    minutes += HOUR_LINE_STEP_MINUTES
-  ) {
-    const line = buildHourLine(minutes, latitude);
-    if (line) hourLines.push(line);
+  for (let minutes = 0; minutes < MINUTES_PER_DAY; minutes += HOUR_STEP_MINUTES) {
+    hourLines.push(buildHourLine(minutes, latitude));
   }
 
   return { latitude, termArcs, hourLines };
 }
-
-export { HOUR_ANGLE_START, HOUR_ANGLE_END };

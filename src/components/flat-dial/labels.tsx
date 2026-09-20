@@ -16,7 +16,7 @@ interface LabelsProps {
   palette: Palette;
 }
 
-/** 주선 일곱 개에 묘 진 사 오 미 신 유를 붙인다. */
+/** 주선 열둘에 12지 이름을 붙인다. 원을 한 바퀴 두른다. */
 export function FlatLabels({ geometry, center, radius, palette }: LabelsProps) {
   const labels = useMemo(
     () =>

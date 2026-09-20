@@ -25,9 +25,9 @@ export function Plate({ geometry, radius, palette }: PlateProps) {
     () =>
       geometry.termArcs.map((arc) => ({
         key: arc.label,
-        full: arcPath(arc.radius, arc.halfDayAngle, radius),
-        engraved: arcPath(arc.radius, Math.min(arc.halfDayAngle, 105), radius),
-        beyond: arc.exceedsHourRange,
+        // 온 둘레는 옅게, 해가 떠 있는 구간만 또렷하게 긋는다.
+        ring: arcPath(arc.radius, 180, radius),
+        daylight: arc.halfDayAngle > 0 ? arcPath(arc.radius, arc.halfDayAngle, radius) : null,
       })),
     [geometry, radius]
   );
@@ -35,10 +35,18 @@ export function Plate({ geometry, radius, palette }: PlateProps) {
   const hours = useMemo(
     () =>
       geometry.hourLines.map((line) => {
-        const path = Skia.Path.Make();
-        path.moveTo(line.from.x * radius, line.from.y * radius);
-        path.lineTo(line.to.x * radius, line.to.y * radius);
-        return { key: line.apparentMinutes, path, isMajor: line.isMajor };
+        const segment = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+          const path = Skia.Path.Make();
+          path.moveTo(a.x * radius, a.y * radius);
+          path.lineTo(b.x * radius, b.y * radius);
+          return path;
+        };
+        return {
+          key: line.apparentMinutes,
+          path: segment(line.from, line.to),
+          daylight: line.daylight ? segment(line.daylight.from, line.daylight.to) : null,
+          isMajor: line.isMajor,
+        };
       }),
     [geometry, radius]
   );
@@ -61,39 +69,51 @@ export function Plate({ geometry, radius, palette }: PlateProps) {
         color={palette.rim}
       />
 
-      {arcs.map((arc) =>
-        arc.beyond ? (
-          <Path
-            key={`term-out-${arc.key}`}
-            path={arc.full}
-            style="stroke"
-            strokeWidth={radius * 0.005}
-            color={palette.line}
-            opacity={0.3}
-          />
-        ) : null
-      )}
       {arcs.map((arc) => (
         <Path
-          key={`term-${arc.key}`}
-          path={arc.engraved}
+          key={`ring-${arc.key}`}
+          path={arc.ring}
           style="stroke"
-          strokeWidth={radius * 0.007}
+          strokeWidth={radius * 0.004}
           color={palette.line}
-          opacity={0.8}
+          opacity={0.22}
         />
       ))}
-
       {hours.map((line) => (
         <Path
           key={`hour-${line.key}`}
           path={line.path}
           style="stroke"
-          strokeWidth={line.isMajor ? radius * 0.013 : radius * 0.005}
-          color={line.isMajor ? palette.lineMajor : palette.line}
-          opacity={line.isMajor ? 0.9 : 0.5}
+          strokeWidth={line.isMajor ? radius * 0.009 : radius * 0.004}
+          color={palette.line}
+          opacity={line.isMajor ? 0.42 : 0.22}
         />
       ))}
+
+      {arcs.map((arc) =>
+        arc.daylight ? (
+          <Path
+            key={`term-${arc.key}`}
+            path={arc.daylight}
+            style="stroke"
+            strokeWidth={radius * 0.007}
+            color={palette.line}
+            opacity={0.85}
+          />
+        ) : null
+      )}
+      {hours.map((line) =>
+        line.daylight ? (
+          <Path
+            key={`day-${line.key}`}
+            path={line.daylight}
+            style="stroke"
+            strokeWidth={line.isMajor ? radius * 0.013 : radius * 0.005}
+            color={line.isMajor ? palette.lineMajor : palette.line}
+            opacity={line.isMajor ? 0.92 : 0.55}
+          />
+        ) : null
+      )}
 
       {/* 가운데 영침 자리. 눈금이 들어오지 않는 빈 터다. */}
       <Circle

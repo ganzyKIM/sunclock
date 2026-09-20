@@ -98,6 +98,7 @@ export function DialScreen() {
         {isSupportedLatitude(location.latitude) ? (
           <>
             <View style={styles.stage}>
+            {settings.dialView === "bowl" ? (
               <Dial
                 geometry={geometry}
                 shadow={state.shadow}
@@ -105,18 +106,20 @@ export function DialScreen() {
                 palette={palette}
                 size={size}
                 glowing={orientation.isAligned}
-                sky={{
-                  sunAltitude: state.sun.altitude,
-                  sunAzimuth: state.sun.azimuth,
-                  moonAltitude: state.moon.position.altitude,
-                  moonAzimuth: state.moon.position.azimuth,
-                  moonFraction: state.moon.illuminatedFraction,
-                  heading,
-                  night: state.mode !== "sun",
-                }}
+                sky={sky}
               />
+            ) : (
+              <FlatDial
+                geometry={flatGeometry}
+                tip={state.flatTip}
+                palette={palette}
+                size={size}
+                glowing={orientation.isAligned}
+                sky={sky}
+              />
+            )}
 
-              <AlignmentGuide
+            <AlignmentGuide
                 headingDegrees={orientation.headingDegrees}
                 isAligned={orientation.isAligned}
                 isFlat={orientation.isFlat}

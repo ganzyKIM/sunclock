@@ -78,7 +78,9 @@ describe("buildFlatGeometry", () => {
     }
     for (const line of geometry.hourLines) {
       for (const p of [line.from, line.to]) {
-        expect(Math.hypot(p.x, p.y)).toBeLessThanOrEqual(OUTER_RADIUS + 1e-9);
+        const d = Math.hypot(p.x, p.y);
+        expect(d).toBeGreaterThanOrEqual(INNER_RADIUS - 1e-9);
+        expect(d).toBeLessThanOrEqual(OUTER_RADIUS + 1e-9);
       }
     }
   });
@@ -96,41 +98,45 @@ describe("buildFlatGeometry", () => {
     expect(equinox.halfDayAngle).toBeCloseTo(90, 6);
   });
 
-  it("여름 절기선 몇 개가 시각선 범위를 넘는다", () => {
-    // 서울에서는 소만 무렵부터 해가 오전 5시 전에 뜬다.
-    const beyond = geometry.termArcs.filter((a) => a.exceedsHourRange);
-    expect(beyond).toHaveLength(3);
-    for (const arc of beyond) expect(arc.declination).toBeGreaterThan(20);
-    expect(beyond.some((a) => a.declination > 23)).toBe(true);
+  it("열두 시 이름이 한 바퀴 돈다", () => {
+    const labels = geometry.hourLines.filter((l) => l.label).map((l) => l.label);
+    expect(labels).toEqual(["자","축","인","묘","진","사","오","미","신","유","술","해"]);
   });
 
-  it("겨울 절기선은 시각선 범위 안에 든다", () => {
-    for (const arc of geometry.termArcs.filter((a) => a.declination <= 0)) {
-      expect(arc.exceedsHourRange).toBe(false);
-    }
-  });
-
-  it("시각선이 29개이고 그중 7개가 주선이다", () => {
-    expect(geometry.hourLines).toHaveLength(29);
-    expect(geometry.hourLines.filter((l) => l.isMajor)).toHaveLength(7);
-  });
-
-  it("주선에만 이름이 붙는다", () => {
-    expect(geometry.hourLines.filter((l) => l.label).map((l) => l.label)).toEqual([
-      "묘", "진", "사", "오", "미", "신", "유",
-    ]);
-  });
-
-  it("정오 시각선이 가장 길다. 어느 철에도 해가 떠 있기 때문이다", () => {
+  it("자시 정은 아래쪽이고 오시 정은 위쪽이다", () => {
+    const midnight = geometry.hourLines.find((l) => l.apparentMinutes === 0)!;
     const noon = geometry.hourLines.find((l) => l.apparentMinutes === 720)!;
-    const earliest = geometry.hourLines.find((l) => l.apparentMinutes === 300)!;
-    const lengthOf = (l: typeof noon) => Math.hypot(l.to.x - l.from.x, l.to.y - l.from.y);
-    expect(lengthOf(noon)).toBeGreaterThan(lengthOf(earliest));
+    expect(midnight.to.y).toBeGreaterThan(0);
+    expect(noon.to.y).toBeLessThan(0);
   });
 
-  it("이른 시각선은 여름 쪽에만 남는다", () => {
-    const earliest = geometry.hourLines.find((l) => l.apparentMinutes === 300)!;
-    expect(Math.hypot(earliest.to.x, earliest.to.y)).toBeLessThan(radiusFor(15));
+  it("한밤중 시각선에는 해가 떠 있을 구간이 없다", () => {
+    const midnight = geometry.hourLines.find((l) => l.apparentMinutes === 0)!;
+    expect(midnight.daylight).toBeNull();
+  });
+
+  it("정오 시각선은 어느 철에도 해가 떠 있다", () => {
+    const noon = geometry.hourLines.find((l) => l.apparentMinutes === 720)!;
+    expect(noon.daylight).not.toBeNull();
+  });
+
+  it("시각선이 하루를 30분마다 한 바퀴 덮는다", () => {
+    expect(geometry.hourLines).toHaveLength(48);
+    expect(geometry.hourLines.filter((l) => l.isMajor)).toHaveLength(12);
+  });
+
+  it("낮 구간은 정오가 가장 길고 이른 아침은 짧다", () => {
+    const noon = geometry.hourLines.find((l) => l.apparentMinutes === 720)!;
+    const early = geometry.hourLines.find((l) => l.apparentMinutes === 300)!;
+    const span = (l: typeof noon) =>
+      l.daylight ? Math.hypot(l.daylight.to.x - l.daylight.from.x, l.daylight.to.y - l.daylight.from.y) : 0;
+    expect(span(noon)).toBeGreaterThan(span(early));
+    expect(span(early)).toBeGreaterThan(0);
+  });
+
+  it("이른 시각선의 낮 구간은 여름 쪽에만 남는다", () => {
+    const early = geometry.hourLines.find((l) => l.apparentMinutes === 300)!;
+    expect(Math.hypot(early.daylight!.to.x, early.daylight!.to.y)).toBeLessThan(radiusFor(15));
   });
 
   it("눈금의 자리는 위도와 무관하다. 달라지는 것은 낮의 길이뿐이다", () => {
