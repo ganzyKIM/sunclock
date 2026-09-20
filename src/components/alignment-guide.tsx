@@ -28,20 +28,20 @@ export function AlignmentGuide({
   palette,
 }: AlignmentGuideProps) {
   if (!compassAvailable) {
-    return <Hint palette={palette} text="나침반을 쓸 수 없어 방향을 맞춘 것으로 두었어요" />;
+    return <Hint palette={palette} text="나침반이 없어 맞춘 것으로 둡니다" />;
   }
 
   if (!isFlat) {
     return (
       <Hint
         palette={palette}
-        text={`휴대폰을 바닥에 눕혀 주세요 · ${Math.round(tiltDegrees)}도 기울었어요`}
+        text={`바닥에 눕혀 주세요 · ${Math.round(tiltDegrees)}도 기울었어요`}
       />
     );
   }
 
   if (accuracy <= LOW_ACCURACY) {
-    return <Hint palette={palette} text="나침반이 흔들려요 · 휴대폰을 팔자로 크게 흔들어 주세요" />;
+    return <Hint palette={palette} text="나침반이 흔들려요 · 팔자로 크게 흔들어 주세요" />;
   }
 
   if (isAligned) {
@@ -81,9 +81,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     borderRadius: RADIUS.round,
+    maxWidth: "100%",
   },
   text: {
     fontSize: FONT_SIZE.caption,
     fontWeight: "600",
+    textAlign: "center",
   },
 });

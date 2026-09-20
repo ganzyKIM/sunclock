@@ -1,6 +1,8 @@
 import { HANYANG_LATITUDE } from "./dial/geometry";
 
 export interface Settings {
+  /** 눈금을 펼친 원반으로 볼지 오목한 반구로 볼지. */
+  dialView: "flat" | "bowl";
   /** 눈금을 어느 위도로 그릴지. */
   dialLatitude: "device" | "hanyang";
   /** 밤에 달시계를 쓸지 일출을 기다릴지. */
@@ -9,6 +11,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  dialView: "flat",
   dialLatitude: "device",
   nightMode: "moon",
   manualLocation: null,
@@ -38,6 +41,10 @@ export function mergeSettings(stored: unknown): Settings {
   const value = stored as Record<string, unknown>;
 
   return {
+    dialView:
+      value.dialView === "flat" || value.dialView === "bowl"
+        ? value.dialView
+        : DEFAULT_SETTINGS.dialView,
     dialLatitude:
       value.dialLatitude === "hanyang" || value.dialLatitude === "device"
         ? value.dialLatitude

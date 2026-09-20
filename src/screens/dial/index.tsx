@@ -5,9 +5,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AlignmentGuide } from "../../components/alignment-guide";
 import { Dial } from "../../components/dial";
+import { FlatDial } from "../../components/flat-dial";
 import { Notice } from "../../components/notice";
 import { ReadingCard } from "../../components/reading-card";
-import { useDialGeometry } from "../../hooks/use-dial-geometry";
+import { useDialGeometry, useFlatGeometry } from "../../hooks/use-dial-geometry";
 import { useLocation } from "../../hooks/use-location";
 import { useNow } from "../../hooks/use-now";
 import { useOrientation } from "../../hooks/use-orientation";
@@ -34,6 +35,7 @@ export function DialScreen() {
 
   const dialLatitude = dialLatitudeOf(settings, location.latitude);
   const geometry = useDialGeometry(dialLatitude);
+  const flatGeometry = useFlatGeometry(dialLatitude);
 
   /** 나침반이 없으면 맞춰 놓은 것으로 보고 눈금을 읽을 수 있게 둔다. */
   const heading = orientation.compassAvailable ? orientation.headingDegrees : 0;
@@ -54,9 +56,20 @@ export function DialScreen() {
   );
 
   const light = state.mode === "moon" ? state.moon.position : state.sun;
-  const rodShadow = state.shadow
-    ? rodShadowPoints(dialLatitude, light.altitude, light.azimuth, heading)
-    : [];
+  const rodShadow =
+    settings.dialView === "bowl" && state.shadow
+      ? rodShadowPoints(dialLatitude, light.altitude, light.azimuth, heading)
+      : [];
+
+  const sky = {
+    sunAltitude: state.sun.altitude,
+    sunAzimuth: state.sun.azimuth,
+    moonAltitude: state.moon.position.altitude,
+    moonAzimuth: state.moon.position.azimuth,
+    moonFraction: state.moon.illuminatedFraction,
+    heading,
+    night: state.mode !== "sun",
+  };
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: palette.background }]}>
@@ -149,8 +162,11 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
     paddingBottom: SPACING.lg,
   },
+  /**
+   * 늘어나지 않는다. 늘어나면 읽기 카드를 화면 밖으로 밀어낸다.
+   * 자리가 남을 때 가운데로 모으는 일은 바깥 스크롤이 맡는다.
+   */
   stage: {
-    flexGrow: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",

@@ -41,6 +41,22 @@ export function SettingsScreen() {
         </Pressable>
 
         <OptionRow
+          title="눈금 보기"
+          description={
+            "펼친 원반은 반구를 극축 기준으로 펴 놓은 것이에요. " +
+            "영침이 한가운데 점이 되고 그림자가 시계바늘처럼 돕니다. " +
+            "오목한 반구는 실제 유물의 모습 그대로예요."
+          }
+          options={[
+            { value: "flat", label: "펼친 원반" },
+            { value: "bowl", label: "오목한 반구" },
+          ]}
+          value={settings.dialView}
+          onChange={(value) => update({ dialView: value as Settings["dialView"] })}
+          palette={palette}
+        />
+
+        <OptionRow
           title="눈금의 위도"
           description={
             "앙부일구는 만든 곳의 위도에 맞춰 눈금을 새겼어요. " +

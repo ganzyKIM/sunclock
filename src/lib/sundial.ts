@@ -8,6 +8,7 @@ import {
   sunPosition,
 } from "./astro/solar";
 import { SOLAR_TERMS } from "./dial/constants";
+import { flatPoint } from "./dial/flat";
 import { DialPoint, shadowPoint } from "./dial/projection";
 import { normalizeDegrees } from "./placement/angle";
 import {
@@ -37,6 +38,8 @@ export interface SundialState {
   mode: DialMode;
   /** 반구 위 그림자 끝. 그림자가 없으면 null이다. */
   shadow: DialPoint | null;
+  /** 펼친 원반 위 그림자 끝. 반구와 같은 순간을 다른 방식으로 옮긴 것이다. */
+  flatTip: DialPoint | null;
   apparentMinutes: number;
   standardMinutes: number;
   traditional: TraditionalTime;
@@ -85,13 +88,16 @@ export function buildSundialState(input: SundialInput): SundialState {
   const notices: string[] = [];
   let mode: DialMode = "sun";
   let shadow: DialPoint | null = null;
+  let flatTip: DialPoint | null = null;
 
   if (isDay) {
     shadow = shadowPoint(sun.altitude, sun.azimuth, headingDegrees);
+    flatTip = flatPoint(hourAngle(date, longitude), elements.declination);
   } else if (moonReading) {
     mode = "moon";
     if (moonReading.shadowVisible) {
       shadow = shadowPoint(moon.position.altitude, moon.position.azimuth, headingDegrees);
+      flatTip = flatPoint(moon.hourAngle, moon.declination);
       if (moonReading.beyondSolarTermLines) {
         notices.push("달이 태양보다 높거나 낮게 지나가 그림자가 절기선 밖으로 나갔어요.");
       }
@@ -107,6 +113,7 @@ export function buildSundialState(input: SundialInput): SundialState {
   return {
     mode,
     shadow,
+    flatTip,
     apparentMinutes,
     standardMinutes: standardMinutesFromApparent(
       apparentMinutes,

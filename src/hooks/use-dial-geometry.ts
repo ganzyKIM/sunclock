@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import { buildFlatGeometry, FlatGeometry } from "../lib/dial/flat";
 import { buildDialGeometry, DialGeometry } from "../lib/dial/geometry";
 
 /** 이만큼 위도가 바뀌어야 눈금을 다시 만든다. 몇 킬로미터 움직임은 무시한다. */
@@ -12,4 +13,9 @@ export function quantizeLatitude(latitude: number): number {
 export function useDialGeometry(latitude: number): DialGeometry {
   const stepped = quantizeLatitude(latitude);
   return useMemo(() => buildDialGeometry(stepped), [stepped]);
+}
+
+export function useFlatGeometry(latitude: number): FlatGeometry {
+  const stepped = quantizeLatitude(latitude);
+  return useMemo(() => buildFlatGeometry(stepped), [stepped]);
 }
