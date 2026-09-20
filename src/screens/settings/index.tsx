@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -33,6 +34,7 @@ export function SettingsScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: palette.background }]}>
+      <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
           <Text style={[styles.back, { color: palette.accent }]}>← 돌아가기</Text>

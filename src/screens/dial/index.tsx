@@ -1,4 +1,5 @@
 import { Link } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -59,6 +60,9 @@ export function DialScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: palette.background }]}>
+      {/* 낮에는 바탕이 밝고 밤에는 어두우므로 상태 표시줄도 따라 바뀐다. */}
+      <StatusBar style={state.sun.altitude > 0 ? "dark" : "light"} />
+
       <View style={styles.header}>
         <Text style={[styles.date, { color: palette.textSoft }]}>
           {now.getMonth() + 1}월 {now.getDate()}일
