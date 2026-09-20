@@ -245,6 +245,15 @@ def render_monochrome(geo, size=1024):
     return layer.resize((size, size), Image.LANCZOS)
 
 
+def render_splash_logo(geo, size=1152):
+    """시스템이 띄우는 첫 화면의 가운데 그림.
+
+    안드로이드는 이 그림을 동그랗게 잘라 보여 주므로 안쪽에만 담는다.
+    """
+    layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    return Image.alpha_composite(layer, bowl_layer(size, geo, 0.56))
+
+
 def render_splash(geo, width=1440, height=3120):
     """세로로 긴 화면을 기준으로 삼되, 어느 비율에서 잘려도 중심이 남게 둔다."""
     sky = Image.new("RGB", (1, height))
@@ -330,6 +339,7 @@ def main():
     render_adaptive_foreground(geo).save(OUT / "android-icon-foreground.png")
     render_adaptive_background().save(OUT / "android-icon-background.png")
     render_monochrome(geo).save(OUT / "android-icon-monochrome.png")
+    render_splash_logo(geo).save(OUT / "splash-logo.png")
     render_splash(geo).save(OUT / "splash.png")
     print("그림 완성:", ", ".join(sorted(p.name for p in OUT.glob("*.png"))))
 

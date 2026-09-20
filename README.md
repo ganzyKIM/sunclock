@@ -25,10 +25,30 @@ npx expo run:ios        # 아이폰 시뮬레이터 (Xcode 필요)
 npm test                # 단위 테스트
 npm run typecheck       # 타입 검사
 npm run render-dial     # 눈금을 SVG로 뽑아 눈으로 확인
+npm run render-art      # 아이콘과 스플래시를 다시 그린다
+```
+
+안드로이드 APK를 만들려면 안드로이드 SDK와 자바 17이 필요하다.
+
+```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+npx expo prebuild --platform android --clean
+cd android && ./gradlew assembleRelease
 ```
 
 웹으로 보려면 `npx expo start --web`을 쓴다. 웹에서는 스킨이 쓰는 그래픽 엔진을
 `public/canvaskit.wasm`에서 내려받는다.
+
+## 아이콘과 스플래시
+
+`scripts/render_art.py`가 그린다. 눈금 좌표는 앱의 계산 코드에서 뽑은 것을
+그대로 쓰므로, 아이콘의 눈금은 화면에 뜨는 눈금과 같은 곡선이다.
+디자인 방향은 `docs/design/2026-09-20-quiet-instrument.md`에 적었다.
+
+안드로이드 12부터 시스템 첫 화면은 가운데 그림 하나만 보여 준다.
+그래서 시스템에는 정사각 그림을 주고, 세로로 긴 그림은 앱이 직접 띄운 뒤
+천천히 걷어 낸다.
 
 ## 폴더
 

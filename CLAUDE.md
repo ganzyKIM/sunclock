@@ -27,10 +27,18 @@
 - 웹에서는 스킨의 그리기 모듈이 그래픽 엔진보다 먼저 읽히면 아무것도 그리지 못한다.
   `canvas-host.web.tsx`가 이 순서를 지킨다.
 
+## 그림
+
+- 아이콘과 스플래시는 `scripts/render_art.py`가 그린다. `assets`의 png를 직접
+  고치지 말고 스크립트를 고친 뒤 `npm run render-art`로 다시 뽑는다.
+- 안드로이드 12 이후의 시스템 첫 화면은 가운데 그림 하나뿐이다. 세로로 긴
+  그림은 `src/components/opening.tsx`가 앱 안에서 띄운다.
+
 ## 자주 쓰는 명령
 
 ```bash
 npm test
 npm run typecheck
 npx expo start --web
+npm run render-art
 ```
