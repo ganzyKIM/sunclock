@@ -48,6 +48,20 @@ cd android && ./gradlew assembleRelease
 ./scripts/serve-apk.sh
 ```
 
+실제 기기가 없을 때는 에뮬레이터로 확인한다. 처음 실행하면 가상 기기를
+만들고 띄운다. `install`을 붙이면 APK까지 넣고 앱을 실행한다.
+
+```bash
+./scripts/setup-emulator.sh install
+```
+
+가상 기기는 21대 9로 맞춰 두었다. 시험 기기인 엑스페리아 1 마크5와 같은
+비율이다. 갤럭시 비율로 보려면 `AVD` 이름을 바꿔 한 대 더 만든다.
+
+```bash
+AVD=angbuilgu_galaxy ./scripts/setup-emulator.sh
+```
+
 웹으로 보려면 `npx expo start --web`을 쓴다. 웹에서는 스킨이 쓰는 그래픽 엔진을
 `public/canvaskit.wasm`에서 내려받는다.
 

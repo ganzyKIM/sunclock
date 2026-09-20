@@ -54,4 +54,8 @@ npm test
 npm run typecheck
 npx expo start --web
 npm run render-art
+./scripts/setup-emulator.sh install
 ```
+
+에뮬레이터는 안드로이드 36 arm64 이미지를 쓴다. 가상 기기 이름은
+`angbuilgu_tall`이고 21대 9로 맞춰 두었다.
