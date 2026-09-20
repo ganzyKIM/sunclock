@@ -34,6 +34,19 @@
 - 안드로이드 12 이후의 시스템 첫 화면은 가운데 그림 하나뿐이다. 세로로 긴
   그림은 `src/components/opening.tsx`가 앱 안에서 띄운다.
 
+## 안드로이드 빌드
+
+`/usr/libexec/java_home`은 홈브루로 깐 자바를 찾지 못한다. 경로를 직접 준다.
+
+```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+```
+
+`android` 폴더는 저장소에 없다. `prebuild` 뒤에 `gradle.properties`의
+`reactNativeArchitectures`를 `arm64-v8a`로 고쳐야 APK가 54MB로 나온다.
+그대로 두면 144MB가 된다. 자세한 것은 README에 있다.
+
 ## 자주 쓰는 명령
 
 ```bash

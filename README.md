@@ -34,6 +34,11 @@ npm run render-art      # 아이콘과 스플래시를 다시 그린다
 export ANDROID_HOME=$HOME/Library/Android/sdk
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
 npx expo prebuild --platform android --clean
+
+# 요즘 기기는 arm64뿐이다. 네 계열을 다 담으면 144MB, arm64만 담으면 54MB가 된다.
+# android 폴더는 저장소에 없으므로 prebuild 뒤에 매번 고쳐야 한다.
+sed -i '' 's/^reactNativeArchitectures=.*/reactNativeArchitectures=arm64-v8a/' android/gradle.properties
+
 cd android && ./gradlew assembleRelease
 ```
 
