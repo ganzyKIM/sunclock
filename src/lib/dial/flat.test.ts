@@ -24,6 +24,12 @@ describe("radiusFor", () => {
   it("춘추분이 가운데 자리다", () => {
     expect(radiusFor(0)).toBeCloseTo((INNER_RADIUS + OUTER_RADIUS) / 2, 9);
   });
+
+  it("눈금을 벗어난 적위는 안팎 끝에 붙인다", () => {
+    // 달은 태양보다 남북으로 넓게 움직인다.
+    expect(radiusFor(28)).toBeCloseTo(INNER_RADIUS, 9);
+    expect(radiusFor(-28)).toBeCloseTo(OUTER_RADIUS, 9);
+  });
 });
 
 describe("flatPoint", () => {

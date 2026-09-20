@@ -19,19 +19,38 @@ export function Hand({ tip, radius, palette, glowing }: HandProps) {
   const x = tip.x * radius;
   const y = tip.y * radius;
 
+  // 바늘이 가운데서 나오므로 뒤쪽으로 조금 내밀어 시계바늘처럼 보이게 한다.
+  const length = Math.hypot(x, y);
+  const backX = length > 0 ? (-x / length) * radius * 0.09 : 0;
+  const backY = length > 0 ? (-y / length) * radius * 0.09 : 0;
+
   return (
     <>
       <Line
-        p1={vec(0, 0)}
+        p1={vec(backX, backY)}
         p2={vec(x, y)}
         color={palette.shadow}
-        strokeWidth={radius * 0.028}
+        strokeWidth={radius * 0.034}
         strokeCap="round"
-        opacity={0.6}
+        opacity={0.75}
       />
-      <Circle cx={x} cy={y} r={radius * (glowing ? 0.07 : 0.052)} color={palette.glow} opacity={glowing ? 0.5 : 0.32} />
-      <Circle cx={x} cy={y} r={radius * 0.024} color={palette.shadow} />
-      <Circle cx={x} cy={y} r={radius * 0.011} color={palette.glow} />
+      <Line
+        p1={vec(backX, backY)}
+        p2={vec(x, y)}
+        color={palette.glow}
+        strokeWidth={radius * 0.008}
+        strokeCap="round"
+        opacity={0.35}
+      />
+      <Circle
+        cx={x}
+        cy={y}
+        r={radius * (glowing ? 0.085 : 0.065)}
+        color={palette.glow}
+        opacity={glowing ? 0.55 : 0.38}
+      />
+      <Circle cx={x} cy={y} r={radius * 0.028} color={palette.shadow} />
+      <Circle cx={x} cy={y} r={radius * 0.013} color={palette.glow} />
     </>
   );
 }

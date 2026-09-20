@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { Dial } from "../../components/dial";
-import { horizontalFromEquatorial } from "../../lib/astro/solar";
+import { FlatDial } from "../../components/flat-dial";
+import { horizonHourAngle } from "../../lib/astro/solar";
 import { SOLAR_TERM_GROUPS } from "../../lib/dial/constants";
-import { buildDialGeometry } from "../../lib/dial/geometry";
-import { rodShadowPoints, shadowPoint } from "../../lib/dial/projection";
+import { buildFlatGeometry, flatPoint } from "../../lib/dial/flat";
 import { FONT_SIZE, Palette, SPACING } from "../../theme";
 
 const FRAME_MS = 900;
@@ -23,7 +22,7 @@ export function TermAnimation({
   size: number;
 }) {
   const [index, setIndex] = useState(0);
-  const geometry = useMemo(() => buildDialGeometry(latitude), [latitude]);
+  const geometry = useMemo(() => buildFlatGeometry(latitude), [latitude]);
 
   useEffect(() => {
     const timer = setInterval(
@@ -34,21 +33,19 @@ export function TermAnimation({
   }, []);
 
   const group = SOLAR_TERM_GROUPS[index];
-  const light = horizontalFromEquatorial(DEMO_HOUR_ANGLE, group.declination, latitude);
-  const visible = light.altitude > 0;
+  const visible = Math.abs(DEMO_HOUR_ANGLE) <= horizonHourAngle(latitude, group.declination);
 
   return (
     <View style={styles.box}>
-      <Dial
+      <FlatDial
         geometry={geometry}
-        shadow={visible ? shadowPoint(light.altitude, light.azimuth, 0) : null}
-        rodShadow={visible ? rodShadowPoints(latitude, light.altitude, light.azimuth, 0) : []}
+        tip={visible ? flatPoint(DEMO_HOUR_ANGLE, group.declination) : null}
         palette={palette}
         size={size}
         glowing={false}
       />
       <Text style={[styles.caption, { color: palette.textSoft }]}>
-        같은 오전 10시라도 {group.label}에는 그림자가 이만큼 달라져요
+        같은 오전 10시라도 {group.label}에는 바늘이 이만큼 길어져요
       </Text>
     </View>
   );

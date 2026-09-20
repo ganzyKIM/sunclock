@@ -29,10 +29,18 @@ export const MAJOR_STEP_MINUTES = 120;
 const MINUTES_PER_DAY = 1440;
 const DECLINATION_SAMPLES = 121;
 
+/**
+ * 적위를 원반 위의 반지름으로 옮긴다.
+ *
+ * 달은 태양보다 남북으로 넓게 움직여 눈금 밖으로 나간다. 그대로 두면
+ * 바늘 끝이 가운데 영침 자리로 파고들어 보이지 않는다. 그래서 눈금의
+ * 안팎 끝으로 붙인다. 눈금을 벗어났다는 사실은 글로 따로 알린다.
+ */
 export function radiusFor(declination: number): number {
   // 극에서 떨어진 각도. 하지가 가장 작고 동지가 가장 크다.
   const t = (90 - declination - (90 - OBLIQUITY)) / (2 * OBLIQUITY);
-  return INNER_RADIUS + (OUTER_RADIUS - INNER_RADIUS) * t;
+  const r = INNER_RADIUS + (OUTER_RADIUS - INNER_RADIUS) * t;
+  return Math.min(OUTER_RADIUS, Math.max(INNER_RADIUS, r));
 }
 
 /** 정오가 위쪽이고 시간이 흐를수록 시계 방향으로 돈다. */
