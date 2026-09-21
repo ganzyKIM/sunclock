@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
 import {
+  ALIGNMENT_RELEASE_DEGREES,
   ALIGNMENT_TOLERANCE_DEGREES,
+  FLAT_RELEASE_DEGREES,
   FLAT_TOLERANCE_DEGREES,
   smoothAngle,
   tiltFromRotation,
@@ -56,7 +58,10 @@ export function useOrientation(): OrientationState {
           ...previous,
           headingDegrees,
           accuracy: heading.accuracy,
-          isAligned: offset <= ALIGNMENT_TOLERANCE_DEGREES,
+          // 한번 맞으면 조금 벗어나도 유지한다. 경계에서 깜빡이지 않게 한다.
+          isAligned: offset <= (previous.isAligned
+            ? ALIGNMENT_RELEASE_DEGREES
+            : ALIGNMENT_TOLERANCE_DEGREES),
           compassAvailable: true,
         }));
       });
@@ -83,7 +88,9 @@ export function useOrientation(): OrientationState {
         setState((previous) => ({
           ...previous,
           tiltDegrees,
-          isFlat: tiltDegrees <= FLAT_TOLERANCE_DEGREES,
+          isFlat: tiltDegrees <= (previous.isFlat
+            ? FLAT_RELEASE_DEGREES
+            : FLAT_TOLERANCE_DEGREES),
         }));
       });
     };

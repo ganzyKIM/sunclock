@@ -1,6 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { angleDifference } from "../lib/placement/angle";
+import {
+  angleDifference,
+  GUIDE_STEP_DEGREES,
+  roundToStep,
+} from "../lib/placement/angle";
 import { FONT_SIZE, Palette, RADIUS, SPACING } from "../theme";
 
 interface AlignmentGuideProps {
@@ -35,7 +39,7 @@ export function AlignmentGuide({
     return (
       <Hint
         palette={palette}
-        text={`바닥에 눕혀 주세요 · ${Math.round(tiltDegrees)}도 기울었어요`}
+        text={`바닥에 눕혀 주세요 · ${roundToStep(tiltDegrees, 5)}도쯤 기울었어요`}
       />
     );
   }
@@ -50,11 +54,10 @@ export function AlignmentGuide({
 
   const offset = angleDifference(0, headingDegrees);
   const direction = offset > 0 ? "오른쪽" : "왼쪽";
+  // 한 도 단위로 안내하면 숫자가 떨리고 맞추기도 어렵다.
+  const amount = roundToStep(Math.abs(offset), GUIDE_STEP_DEGREES);
   return (
-    <Hint
-      palette={palette}
-      text={`${direction}으로 ${Math.round(Math.abs(offset))}도 돌려 주세요`}
-    />
+    <Hint palette={palette} text={`${direction}으로 ${amount}도쯤 돌려 주세요`} />
   );
 }
 

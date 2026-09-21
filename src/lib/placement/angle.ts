@@ -16,10 +16,27 @@ export function angleDifference(a: number, b: number): number {
   return d > 180 ? d - 360 : d;
 }
 
-/** 정렬로 인정하는 방위 오차. 도 단위. */
-export const ALIGNMENT_TOLERANCE_DEGREES = 3;
-/** 수평으로 인정하는 기울기. 도 단위. */
-export const FLAT_TOLERANCE_DEGREES = 5;
+/**
+ * 손으로 맞출 수 있는 만큼만 요구한다.
+ * 몇 도 단위로 맞추라고 하면 아무도 맞출 수 없다.
+ */
+export const ALIGNMENT_TOLERANCE_DEGREES = 15;
+export const FLAT_TOLERANCE_DEGREES = 15;
+
+/**
+ * 한번 맞았다고 본 뒤에는 조금 더 벗어나야 풀린다.
+ * 경계에 걸쳐 있을 때 표시가 깜빡이는 것을 막는다.
+ */
+export const ALIGNMENT_RELEASE_DEGREES = 22;
+export const FLAT_RELEASE_DEGREES = 22;
+
+/** 안내하는 각도를 큰 단위로 끊는다. 숫자가 떨리지 않게 한다. */
+export function roundToStep(value: number, step: number): number {
+  return Math.round(value / step) * step;
+}
+
+/** 돌리라고 안내할 때 쓰는 단위. */
+export const GUIDE_STEP_DEGREES = 15;
 
 /** 0도와 360도 경계를 가로질러도 튀지 않게 각도를 누그러뜨린다. */
 export function smoothAngle(previous: number | null, next: number, factor: number): number {

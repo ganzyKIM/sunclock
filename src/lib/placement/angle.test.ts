@@ -71,3 +71,43 @@ describe("tiltFromRotation", () => {
     expect(tiltFromRotation(0.05, 0.02)).toBeLessThan(FLAT_TOLERANCE_DEGREES);
   });
 });
+
+import {
+  ALIGNMENT_RELEASE_DEGREES,
+  ALIGNMENT_TOLERANCE_DEGREES,
+  FLAT_RELEASE_DEGREES,
+  GUIDE_STEP_DEGREES,
+  roundToStep,
+} from "./angle";
+
+describe("허용치", () => {
+  it("손으로 맞출 수 있을 만큼 넉넉하다", () => {
+    expect(ALIGNMENT_TOLERANCE_DEGREES).toBeGreaterThanOrEqual(10);
+    expect(FLAT_TOLERANCE_DEGREES).toBeGreaterThanOrEqual(10);
+  });
+
+  it("풀리는 값이 맞는 값보다 넉넉해야 깜빡이지 않는다", () => {
+    expect(ALIGNMENT_RELEASE_DEGREES).toBeGreaterThan(ALIGNMENT_TOLERANCE_DEGREES);
+    expect(FLAT_RELEASE_DEGREES).toBeGreaterThan(FLAT_TOLERANCE_DEGREES);
+  });
+});
+
+describe("roundToStep", () => {
+  it("가까운 눈금으로 끊는다", () => {
+    expect(roundToStep(37, 15)).toBe(30);
+    expect(roundToStep(38, 15)).toBe(45);
+    expect(roundToStep(7, 15)).toBe(0);
+    expect(roundToStep(8, 15)).toBe(15);
+  });
+
+  it("음수도 같은 방식으로 끊는다", () => {
+    expect(roundToStep(-37, 15)).toBe(-30);
+    expect(roundToStep(-38, 15)).toBe(-45);
+  });
+
+  it("허용치를 넘은 각도는 0으로 끊기지 않는다", () => {
+    for (let offset = ALIGNMENT_TOLERANCE_DEGREES + 1; offset <= 180; offset += 1) {
+      expect(roundToStep(offset, GUIDE_STEP_DEGREES)).toBeGreaterThan(0);
+    }
+  });
+});
