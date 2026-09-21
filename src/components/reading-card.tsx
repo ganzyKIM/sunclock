@@ -47,13 +47,20 @@ export function ReadingCard({ state, palette }: ReadingCardProps) {
       </View>
 
       <View style={styles.row}>
-        <Text style={[styles.detail, { color: palette.textSoft }]}>
-          {shadowMinutes === null
-            ? `시계 ${formatClockTime(state.standardMinutes)}`
-            : `${shadowName} ${formatClockTime(shadowMinutes)} · 시계 ${formatClockTime(
-                state.standardMinutes
-              )}`}
-        </Text>
+        {/* 한 덩어리가 중간에서 잘리지 않도록 덩어리째 줄을 넘긴다. */}
+        <View style={styles.units}>
+          {shadowMinutes !== null ? (
+            <>
+              <Text style={[styles.detail, { color: palette.textSoft }]}>
+                {shadowName} {formatClockTime(shadowMinutes)}
+              </Text>
+              <Text style={[styles.detail, { color: palette.textSoft }]}>·</Text>
+            </>
+          ) : null}
+          <Text style={[styles.detail, { color: palette.textSoft }]}>
+            시계 {formatClockTime(state.standardMinutes)}
+          </Text>
+        </View>
         <InfoTooltip
           label="왜 다를까"
           title="해시계와 시계의 차이"
@@ -76,10 +83,16 @@ export function ReadingCard({ state, palette }: ReadingCardProps) {
             12시간 뒤집으면 {state.moonReading.flippedLabel}
           </Text>
           <View style={styles.row}>
-            <Text style={[styles.detail, { color: palette.textSoft }]}>
-              보름에서 {Math.abs(Math.round(state.moon.daysFromFullMoon))}일{" "}
-              {state.moon.daysFromFullMoon >= 0 ? "지남" : "전"} · {state.moon.phaseName}
-            </Text>
+            <View style={styles.units}>
+              <Text style={[styles.detail, { color: palette.textSoft }]}>
+                보름에서 {Math.abs(Math.round(state.moon.daysFromFullMoon))}일{" "}
+                {state.moon.daysFromFullMoon >= 0 ? "지남" : "전"}
+              </Text>
+              <Text style={[styles.detail, { color: palette.textSoft }]}>·</Text>
+              <Text style={[styles.detail, { color: palette.textSoft }]}>
+                {state.moon.phaseName}
+              </Text>
+            </View>
             <InfoTooltip
               label="달시계"
               title="달로 시각 읽기"
@@ -120,7 +133,16 @@ const styles = StyleSheet.create({
   term: { fontSize: FONT_SIZE.caption },
   friendly: { fontSize: FONT_SIZE.hero, fontWeight: "700" },
   traditional: { fontSize: FONT_SIZE.title, fontWeight: "600" },
-  detail: { fontSize: FONT_SIZE.caption, flexShrink: 1 },
+  detail: { fontSize: FONT_SIZE.caption },
+  /** 덩어리마다 하나씩. 자리가 모자라면 덩어리째 다음 줄로 넘어간다. */
+  units: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    columnGap: SPACING.sm,
+    rowGap: SPACING.xs,
+    flexShrink: 1,
+  },
   notice: { fontSize: FONT_SIZE.caption, fontWeight: "600" },
   row: {
     flexDirection: "row",
