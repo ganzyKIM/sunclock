@@ -4,6 +4,7 @@ import type { FlatGeometry, FlatMoonPath } from "../../lib/dial/flat";
 import type { DialPoint } from "../../lib/dial/projection";
 import type { Palette } from "../../theme";
 import type { SkyContent } from "../dial/sky";
+import { CardinalMarks } from "../dial/cardinal-marks";
 import { FlatCanvasHost } from "./canvas-host";
 import { FlatLabels } from "./labels";
 
@@ -77,6 +78,7 @@ export function FlatDial({
         night={night}
         onSelectBranch={onSelectBranch}
       />
+      {sky ? <CardinalMarks center={center} radius={radius} palette={palette} /> : null}
     </View>
   );
 }

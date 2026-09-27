@@ -107,6 +107,11 @@ export function ReadingCard({
         },
       ]}
     >
+      {/* 안쪽에 한 겹 더 두른 가는 틀. 액자처럼 보이게 한다. */}
+      <View
+        pointerEvents="none"
+        style={[styles.inner, { borderColor: withAlpha(palette.line, 0.22) }]}
+      />
       <Animated.View testID="reading-body" style={[styles.body, { opacity: fade }]}>
         <View style={styles.row}>
           <Text
@@ -295,6 +300,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   body: { gap: SPACING.xs, width: "100%" },
+  inner: {
+    position: "absolute",
+    top: 5,
+    left: 5,
+    right: 5,
+    bottom: 5,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderRadius: RADIUS.lg - 5,
+  },
   term: { fontSize: FONT_SIZE.caption, fontWeight: "400" },
   /** 줄 높이를 못 박아 글자가 바뀌어도 자리가 같다. */
   friendly: {

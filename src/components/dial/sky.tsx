@@ -1,6 +1,7 @@
 import { BlurMask, Circle, Group, Line, Path, RadialGradient, Skia, vec } from "@shopify/react-native-skia";
 import { useMemo } from "react";
 
+import { sprig } from "../../lib/art/ornament";
 import { horizonDirection } from "../../lib/dial/projection";
 import { Palette, withAlpha } from "../../theme";
 
@@ -40,6 +41,11 @@ const RAY_COUNT = 8;
 /** 낮에 맞추면 하늘에 떠다니는 꽃잎. */
 const PETAL_COUNT = 7;
 const PETAL_COLOR = "#e6b0b6";
+/** 해와 달 고리 바깥에 점을 찍은 테. 여섯 도마다 하나다. */
+const DOT_RING = 1.3;
+const DOT_STEP = 6;
+/** 상자 구석에 앉는 잔가지의 크기. 반지름에 대한 비율. */
+const SPRIG_SIZE = 0.62;
 
 /**
  * 해와 달을 실제 방위에 맞춰 반구 바깥에 띄운다. 그림자가 왜 저쪽으로 뻗는지 보인다.
@@ -99,6 +105,35 @@ export function Sky({
     return path;
   }, []);
 
+  /** 구석의 잔가지. 왼쪽 위와 오른쪽 아래에 마주 놓는다. */
+  const ornament = useMemo(() => {
+    const art = sprig();
+    return {
+      stem: Skia.Path.MakeFromSVGString(art.stem),
+      leaves: art.leaves
+        .map((d) => Skia.Path.MakeFromSVGString(d))
+        .filter((path): path is NonNullable<typeof path> => path !== null),
+      berries: art.berries,
+    };
+  }, []);
+
+  const dots = useMemo(() => {
+    const items: { x: number; y: number; cardinal: boolean }[] = [];
+    for (let deg = 0; deg < 360; deg += DOT_STEP) {
+      const a = (deg * Math.PI) / 180;
+      items.push({
+        x: Math.sin(a) * DOT_RING * radius,
+        y: -Math.cos(a) * DOT_RING * radius,
+        cardinal: deg % 90 === 0,
+      });
+    }
+    return items;
+  }, [radius]);
+
+  // 상자의 반. 눈금판 반지름은 상자의 0.69에서 0.7이다.
+  const half = radius / 0.69;
+  const sprigScale = (radius * SPRIG_SIZE) / 100;
+
   const sun = horizonDirection(sunAzimuth, heading);
   const moon = horizonDirection(moonAzimuth, heading);
   const sunSize = radius * Math.min(MARK_MAX, 0.045 + Math.max(0, sunAltitude) / 1500);
@@ -107,6 +142,70 @@ export function Sky({
 
   return (
     <Group>
+      {/* 구석의 잔가지. 여백이 빈 화면이 아니라 책장으로 보이게 한다. */}
+      {[
+        { x: -half + radius * 0.06, y: -half + radius * 0.06, flip: false },
+        { x: half - radius * 0.06, y: half - radius * 0.06, flip: true },
+      ].map((corner, index) => (
+        <Group
+          key={`sprig-${index}`}
+          transform={[
+            { translateX: corner.x },
+            { translateY: corner.y },
+            { rotate: corner.flip ? Math.PI : 0 },
+            { scale: sprigScale },
+            // 줄기는 상자 왼쪽 아래에서 시작하도록 그려져 있다. 구석에 맞춰 돌린다.
+            { rotate: Math.PI / 2 },
+            { translateX: -4 },
+            { translateY: -96 },
+          ]}
+          opacity={night ? 0.32 : 0.28}
+        >
+          {ornament.stem ? (
+            <Path
+              path={ornament.stem}
+              style="stroke"
+              strokeWidth={1.4}
+              strokeCap="round"
+              color={palette.line}
+            />
+          ) : null}
+          {ornament.leaves.map((leafPath, leafIndex) => (
+            <Path
+              key={`leaf-${leafIndex}`}
+              path={leafPath}
+              style="stroke"
+              strokeWidth={1.1}
+              strokeJoin="round"
+              color={palette.line}
+            />
+          ))}
+          {ornament.berries.map((berry, berryIndex) => (
+            <Circle
+              key={`berry-${berryIndex}`}
+              cx={berry.x}
+              cy={berry.y}
+              r={1.8}
+              color={palette.line}
+            />
+          ))}
+        </Group>
+      ))}
+
+      {/* 점을 찍은 테. 네 방위 자리는 비워 두고 그 위에 방위 한자가 앉는다. */}
+      {dots.map((dot, index) =>
+        dot.cardinal ? null : (
+          <Circle
+            key={`dot-${index}`}
+            cx={dot.x}
+            cy={dot.y}
+            r={radius * 0.005}
+            color={palette.line}
+            opacity={0.4}
+          />
+        )
+      )}
+
       {/* 맞췄을 때 눈금판 둘레에 고이는 빛. 낮에는 볕, 밤에는 달빛이다. */}
       {lit > 0 ? (
         <Circle cx={0} cy={0} r={radius * POOL} opacity={lit * (night ? 0.24 : 0.32)}>

@@ -39,6 +39,8 @@ jest.mock("@shopify/react-native-skia", () => {
     Line: draw("line"),
     LinearGradient: draw("linear-gradient"),
     RadialGradient: draw("radial-gradient"),
+    Rect: draw("rect"),
+    FractalNoise: draw("fractal-noise"),
     vec: (x, y) => ({ x, y }),
     Skia: {
       Path: {

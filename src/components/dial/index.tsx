@@ -5,6 +5,7 @@ import { leanBowlGeometry, leanBowlPoint } from "../../lib/dial/bowl-view";
 import type { DialGeometry } from "../../lib/dial/geometry";
 import type { DialPoint } from "../../lib/dial/projection";
 import type { Palette } from "../../theme";
+import { CardinalMarks } from "./cardinal-marks";
 import { DialCanvasHost } from "./canvas-host";
 import { DialLabels } from "./labels";
 import type { SkyContent } from "./sky";
@@ -100,6 +101,7 @@ export function Dial({
         night={night}
         onSelectBranch={onSelectBranch}
       />
+      {sky ? <CardinalMarks center={center} radius={radius} palette={palette} /> : null}
     </View>
   );
 }

@@ -54,6 +54,25 @@ export const NIGHT_PALETTE: Palette = {
   star: "#ffffff",
 };
 
+/** 해가 지평선에 걸린 노을빛. 밤과 낮 사이를 이 색으로 지나 회색을 피한다. */
+export const DUSK_PALETTE: Palette = {
+  background: "#eccfb4",
+  backgroundEdge: "#d2ad8e",
+  bowl: "#cdae90",
+  bowlDeep: "#a17f64",
+  rim: "#f0d9c0",
+  line: "#6f5745",
+  lineMajor: "#47372b",
+  label: "#3d2f26",
+  shadow: "#382820",
+  glow: "#ffbe74",
+  accent: "#d0762f",
+  text: "#3d2f26",
+  textSoft: "#7b6350",
+  card: "#f8e5d0",
+  star: "#ffe6c6",
+};
+
 const TWILIGHT_LOW = -6;
 const TWILIGHT_HIGH = 6;
 
@@ -95,17 +114,24 @@ export function lerpColor(from: string, to: string, t: number): string {
   return result;
 }
 
-/** 해가 지평선 언저리에 있는 동안 밤빛과 낮빛이 서서히 섞인다. */
+function blendPalettes(from: Palette, to: Palette, t: number): Palette {
+  const blended = {} as Palette;
+  for (const key of Object.keys(from) as (keyof Palette)[]) {
+    blended[key] = lerpColor(from[key], to[key], t);
+  }
+  return blended;
+}
+
+/**
+ * 해가 지평선 언저리에 있는 동안 밤빛과 낮빛이 서서히 섞인다.
+ * 곧장 섞으면 가운데가 잿빛이 된다. 지평선에서는 노을빛을 지난다.
+ */
 export function themeAt(sunAltitude: number): Palette {
   const t = clamp01((sunAltitude - TWILIGHT_LOW) / (TWILIGHT_HIGH - TWILIGHT_LOW));
   if (t === 0) return NIGHT_PALETTE;
   if (t === 1) return DAY_PALETTE;
-
-  const blended = {} as Palette;
-  for (const key of Object.keys(DAY_PALETTE) as (keyof Palette)[]) {
-    blended[key] = lerpColor(NIGHT_PALETTE[key], DAY_PALETTE[key], t);
-  }
-  return blended;
+  if (t < 0.5) return blendPalettes(NIGHT_PALETTE, DUSK_PALETTE, t * 2);
+  return blendPalettes(DUSK_PALETTE, DAY_PALETTE, (t - 0.5) * 2);
 }
 
 export const SPACING = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;

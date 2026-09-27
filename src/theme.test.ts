@@ -1,4 +1,4 @@
-import { DAY_PALETTE, desaturate, lerpColor, NIGHT_PALETTE, themeAt, withAlpha } from "./theme";
+import { DAY_PALETTE, desaturate, DUSK_PALETTE, lerpColor, NIGHT_PALETTE, themeAt, withAlpha } from "./theme";
 
 describe("desaturate", () => {
   it("0이면 그대로다", () => {
@@ -51,6 +51,10 @@ describe("themeAt", () => {
 
   it("해가 깊이 지면 밤 색이다", () => {
     expect(themeAt(-30)).toEqual(NIGHT_PALETTE);
+  });
+
+  it("해가 지평선에 걸리면 노을빛이다", () => {
+    expect(themeAt(0)).toEqual(DUSK_PALETTE);
   });
 
   it("지평선 근처에서는 두 색 사이에 있다", () => {

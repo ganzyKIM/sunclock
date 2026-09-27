@@ -4,9 +4,11 @@ import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AlignmentGuide } from "../../components/alignment-guide";
+import { Backdrop } from "../../components/backdrop";
 import { Compass } from "../../components/compass";
 import { Dial } from "../../components/dial";
 import { FlatDial } from "../../components/flat-dial";
+import { Flourish } from "../../components/flourish";
 import { Notice } from "../../components/notice";
 import { ReadingCard } from "../../components/reading-card";
 import { SkyLegend } from "../../components/sky-legend";
@@ -179,6 +181,9 @@ export function DialScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: background }]}>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Backdrop width={width} height={height} palette={palette} />
+      </View>
 
       <View style={styles.header}>
         <Text style={[styles.date, { color: palette.textSoft }]}>
@@ -262,6 +267,7 @@ export function DialScreen() {
               />
             </View>
 
+            <Flourish palette={palette} width={Math.min(200, size * 0.6)} />
             <ReadingCard state={state} palette={palette} aligned={readable} lit={lit} />
           </>
         ) : (
