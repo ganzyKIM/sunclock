@@ -4,7 +4,10 @@ import {
   flatPoint,
   INNER_RADIUS,
   OUTER_RADIUS,
+  buildMoonPath,
+  isMoonUp,
   radiusFor,
+  rotateFlatPoint,
 } from "./flat";
 import { OBLIQUITY } from "./constants";
 
@@ -153,5 +156,136 @@ describe("buildFlatGeometry", () => {
     const seoulSummer = geometry.termArcs.find((a) => a.declination > 23)!;
     const jejuSummer = jeju.termArcs.find((a) => a.declination > 23)!;
     expect(jejuSummer.halfDayAngle).toBeLessThan(seoulSummer.halfDayAngle);
+  });
+});
+
+describe("rotateFlatPoint", () => {
+  it("북쪽을 맞췄으면 그림자가 제자리에 있다", () => {
+    const point = { x: 0.2, y: -0.5 };
+    const turned = rotateFlatPoint(point, 0);
+    expect(turned.x).toBeCloseTo(point.x, 9);
+    expect(turned.y).toBeCloseTo(point.y, 9);
+  });
+
+  it("휴대폰을 동쪽으로 돌리면 북쪽이 왼쪽으로 간다", () => {
+    // 화면 위쪽이 북쪽이다. 휴대폰 머리를 동쪽으로 돌리면 북쪽은 왼편에 선다.
+    const north = rotateFlatPoint({ x: 0, y: -1 }, 90);
+    expect(north.x).toBeCloseTo(-1, 9);
+    expect(north.y).toBeCloseTo(0, 9);
+  });
+
+  it("반 바퀴 돌리면 정반대를 가리킨다", () => {
+    const turned = rotateFlatPoint({ x: 0, y: -1 }, 180);
+    expect(turned.x).toBeCloseTo(0, 9);
+    expect(turned.y).toBeCloseTo(1, 9);
+  });
+
+  it("돌려도 가운데에서 떨어진 거리는 그대로다", () => {
+    const point = { x: 0.31, y: -0.62 };
+    for (const heading of [17, 73, 128, 249, 341]) {
+      const turned = rotateFlatPoint(point, heading);
+      expect(Math.hypot(turned.x, turned.y)).toBeCloseTo(
+        Math.hypot(point.x, point.y),
+        9
+      );
+    }
+  });
+
+  it("한 바퀴를 다 돌면 처음으로 돌아온다", () => {
+    const point = { x: 0.4, y: 0.1 };
+    const turned = rotateFlatPoint(point, 360);
+    expect(turned.x).toBeCloseTo(point.x, 9);
+    expect(turned.y).toBeCloseTo(point.y, 9);
+  });
+});
+
+describe("펼친 원반의 달 이름", () => {
+  it("주선마다 달로 읽을 이름을 함께 새긴다", () => {
+    const majors = buildFlatGeometry(HANYANG_LATITUDE).hourLines.filter((l) => l.isMajor);
+    expect(majors).toHaveLength(12);
+    for (const line of majors) {
+      expect(line.moonLabel).not.toBeNull();
+      expect(line.moonLabel).not.toBe(line.label);
+    }
+  });
+
+  it("달 이름은 해 이름에서 열두 시간 떨어져 있다", () => {
+    const lines = buildFlatGeometry(HANYANG_LATITUDE).hourLines;
+    const byMinutes = new Map(lines.map((l) => [l.apparentMinutes, l]));
+    for (const line of lines) {
+      if (!line.isMajor) continue;
+      const opposite = byMinutes.get((line.apparentMinutes + 720) % 1440);
+      expect(line.moonLabel).toBe(opposite?.label);
+    }
+  });
+
+  it("주선이 아닌 선에는 붙이지 않는다", () => {
+    const minors = buildFlatGeometry(HANYANG_LATITUDE).hourLines.filter((l) => !l.isMajor);
+    expect(minors.every((l) => l.moonLabel === null)).toBe(true);
+  });
+});
+
+describe("buildMoonPath", () => {
+  it("달의 적위가 그 밤의 반지름을 정한다", () => {
+    const path = buildMoonPath(HANYANG_LATITUDE, 10);
+    expect(path.radius).toBeCloseTo(radiusFor(10), 9);
+    expect(path.declination).toBe(10);
+  });
+
+  it("달이 해와 같은 적위면 그 절기선과 같은 자리를 지난다", () => {
+    const arc = buildFlatGeometry(HANYANG_LATITUDE).termArcs[0];
+    const path = buildMoonPath(HANYANG_LATITUDE, arc.declination);
+    expect(path.radius).toBeCloseTo(arc.radius, 9);
+    expect(path.halfDayAngle).toBeCloseTo(arc.halfDayAngle, 9);
+  });
+
+  it("해보다 남북으로 더 가면 절기선 밖이라고 알린다", () => {
+    expect(buildMoonPath(HANYANG_LATITUDE, OBLIQUITY + 2).beyondTerms).toBe(true);
+    expect(buildMoonPath(HANYANG_LATITUDE, 0).beyondTerms).toBe(false);
+  });
+
+  it("높이 뜬 달일수록 오래 떠 있다", () => {
+    const high = buildMoonPath(HANYANG_LATITUDE, 20);
+    const low = buildMoonPath(HANYANG_LATITUDE, -20);
+    expect(high.halfDayAngle).toBeGreaterThan(low.halfDayAngle);
+  });
+
+  it("떠 있는 동안만 그 시각선을 읽을 수 있다", () => {
+    const path = buildMoonPath(HANYANG_LATITUDE, 0);
+    expect(isMoonUp(path, 0)).toBe(true);
+    expect(isMoonUp(path, path.halfDayAngle - 1)).toBe(true);
+    expect(isMoonUp(path, path.halfDayAngle + 1)).toBe(false);
+    expect(isMoonUp(path, 180)).toBe(false);
+  });
+
+  it("아예 뜨지 않는 날은 어느 시각도 읽을 수 없다", () => {
+    // 북극권에서 한겨울의 남쪽 적위. 하루 내내 지평선 아래에 있다.
+    const path = buildMoonPath(80, -25);
+    expect(path.halfDayAngle).toBe(0);
+    expect(isMoonUp(path, 0)).toBe(false);
+  });
+});
+
+describe("시가 갈리는 자리", () => {
+  it("열둘이 한 바퀴를 고르게 나눈다", () => {
+    const edges = geometry.hourLines.filter((line) => line.isBranchEdge);
+    expect(edges).toHaveLength(12);
+  });
+
+  it("이름이 놓인 자리와 겹치지 않는다", () => {
+    // 이름은 그 시의 한가운데에 있고 경계는 그 사이에 있다.
+    for (const line of geometry.hourLines) {
+      expect(line.isBranchEdge && line.isMajor).toBe(false);
+    }
+  });
+
+  it("이름보다 한 시간 앞에서 그 시가 시작한다", () => {
+    // 진시는 일곱 시에 시작해 아홉 시에 끝나고, 진이라는 이름은 여덟 시에 있다.
+    const byMinutes = new Map(geometry.hourLines.map((l) => [l.apparentMinutes, l]));
+    const dragonName = byMinutes.get(480);
+    const dragonStart = byMinutes.get(420);
+    expect(dragonName?.label).toBe("진");
+    expect(dragonStart?.isBranchEdge).toBe(true);
+    expect(dragonStart?.label).toBeNull();
   });
 });

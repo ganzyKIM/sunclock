@@ -1,4 +1,5 @@
 import { toDegrees, toRadians } from "../placement/angle";
+import { BRANCH_NAMES } from "../time/traditional";
 
 /** 황도 경사각. 도 단위. */
 export const OBLIQUITY = 23.4392911;
@@ -84,4 +85,28 @@ const MAJOR_HOUR_LABELS: readonly string[] = ["묘", "진", "사", "오", "미",
 export function majorHourLabel(minutes: number): string | null {
   const index = MAJOR_HOUR_MINUTES.indexOf(minutes);
   return index < 0 ? null : MAJOR_HOUR_LABELS[index];
+}
+
+const MINUTES_PER_BRANCH = 120;
+const MINUTES_PER_DAY = 1440;
+
+/** 그 시각을 품는 12지 이름. 자시가 한밤을 가운데 둔다. */
+export function branchLabelAt(minutes: number): string {
+  const wrapped = ((minutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+  return BRANCH_NAMES[Math.round(wrapped / MINUTES_PER_BRANCH) % BRANCH_NAMES.length];
+}
+
+/**
+ * 달시계로 읽을 때 이 시각선이 가리키는 이름.
+ *
+ * 보름달은 해의 정반대에 있어 자정에 남중한다. 그래서 달그림자가 어느 선에
+ * 걸렸을 때의 실제 시각은 해로 읽을 때에서 열두 시간 떨어져 있다.
+ *
+ * 실물 앙부일구에는 밤 시각이 아예 없다. 밤에는 그림자가 지지 않으니 새길
+ * 까닭이 없었다. 이 앱은 밤에 달시계로 읽으므로 같은 선에 달 이름을 함께
+ * 새긴다. 그래야 열두 지지가 하나도 빠짐없이 제자리를 얻는다.
+ */
+export function moonHourLabel(minutes: number): string | null {
+  if (majorHourLabel(minutes) === null) return null;
+  return branchLabelAt(minutes + MINUTES_PER_DAY / 2);
 }

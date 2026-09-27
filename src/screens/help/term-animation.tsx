@@ -43,9 +43,11 @@ export function TermAnimation({
         palette={palette}
         size={size}
         glowing={false}
+        night={false}
+        moon={null}
       />
       <Text style={[styles.caption, { color: palette.textSoft }]}>
-        같은 오전 10시라도 {group.label}에는 바늘이 이만큼 길어져요
+        같은 오전 10시라도 {group.label}에는 바늘이 이만큼 길다
       </Text>
     </View>
   );

@@ -1,4 +1,32 @@
-import { DAY_PALETTE, lerpColor, NIGHT_PALETTE, themeAt } from "./theme";
+import { DAY_PALETTE, desaturate, lerpColor, NIGHT_PALETTE, themeAt, withAlpha } from "./theme";
+
+describe("desaturate", () => {
+  it("0이면 그대로다", () => {
+    expect(desaturate("#dcc9ad", 0)).toBe("#dcc9ad");
+  });
+
+  it("1이면 같은 밝기의 회색이다", () => {
+    const gray = desaturate("#ff0000", 1);
+    expect(gray).toBe("#4c4c4c");
+  });
+
+  it("사이에서는 색이 남는다", () => {
+    const half = desaturate("#ff0000", 0.5);
+    expect(half).not.toBe("#ff0000");
+    expect(half.slice(1, 3)).not.toBe(half.slice(3, 5));
+  });
+});
+
+describe("withAlpha", () => {
+  it("여섯 자리 색을 rgba로 옮긴다", () => {
+    expect(withAlpha("#ff8000", 0.5)).toBe("rgba(255, 128, 0, 0.5)");
+  });
+
+  it("투명도를 0과 1 사이로 자른다", () => {
+    expect(withAlpha("#ffffff", 2)).toBe("rgba(255, 255, 255, 1)");
+    expect(withAlpha("#ffffff", -1)).toBe("rgba(255, 255, 255, 0)");
+  });
+});
 
 describe("lerpColor", () => {
   it("양 끝에서 원래 색을 낸다", () => {

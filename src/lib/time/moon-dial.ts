@@ -55,3 +55,13 @@ export function readMoonDial(moon: MoonState, sunHourAngle: number): MoonDialRea
       moon.position.altitude >= MOON_SHADOW_MIN_ALTITUDE,
   };
 }
+
+/**
+ * 달 눈금에서 읽은 값에 더할 분. 부호를 그대로 적는다.
+ * "빠름"이나 "느림"으로 적으면 무엇이 빠른지 되짚어야 한다.
+ */
+export function formatMoonCorrection(minutes: number): string {
+  const rounded = Math.round(minutes);
+  if (rounded === 0) return "0분";
+  return rounded > 0 ? `+${rounded}분` : `−${-rounded}분`;
+}

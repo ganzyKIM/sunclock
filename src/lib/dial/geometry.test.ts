@@ -1,4 +1,4 @@
-import { buildDialGeometry, HANYANG_LATITUDE } from "./geometry";
+import { buildDialGeometry, buildMoonLine, HANYANG_LATITUDE } from "./geometry";
 import { southRimDistanceInDiameters } from "./projection";
 
 const geometry = buildDialGeometry(HANYANG_LATITUDE);
@@ -142,5 +142,68 @@ describe("contiguousRuns", () => {
     const equinox = geometry.solarTermLines.find((l) => Math.abs(l.declination) < 0.01)!;
     expect(contiguousRuns(equinox.points, false)).toHaveLength(0);
     expect(contiguousRuns(equinox.points, true)).toHaveLength(1);
+  });
+});
+
+describe("반구의 달 이름", () => {
+  it("이름 붙은 시각선마다 달로 읽을 이름도 함께 둔다", () => {
+    const named = buildDialGeometry(HANYANG_LATITUDE).hourLines.filter((l) => l.label);
+    expect(named).toHaveLength(7);
+    for (const line of named) {
+      expect(line.moonLabel).not.toBeNull();
+    }
+  });
+
+  it("해 이름과 달 이름을 합치면 열두 지지가 다 나온다", () => {
+    const named = buildDialGeometry(HANYANG_LATITUDE).hourLines.filter((l) => l.label);
+    const names = new Set<string>();
+    for (const line of named) {
+      names.add(line.label as string);
+      names.add(line.moonLabel as string);
+    }
+    expect(names.size).toBe(12);
+  });
+});
+
+describe("buildMoonLine", () => {
+  it("달이 지나는 길을 반구 위에 그린다", () => {
+    const line = buildMoonLine(HANYANG_LATITUDE, 10);
+    expect(line.length).toBeGreaterThan(2);
+    for (const point of line) {
+      expect(Math.hypot(point.x, point.y)).toBeLessThanOrEqual(1 + 1e-9);
+    }
+  });
+
+  it("남중하는 한가운데는 자오선 위에 있다", () => {
+    const line = buildMoonLine(HANYANG_LATITUDE, 10);
+    const middle = line[(line.length - 1) / 2];
+    expect(middle.x).toBeCloseTo(0, 9);
+  });
+
+  it("뜨지 않는 날은 그릴 것이 없다", () => {
+    expect(buildMoonLine(80, -25)).toHaveLength(0);
+  });
+
+  it("적위가 같으면 절기선과 같은 길을 지난다", () => {
+    const group = buildDialGeometry(HANYANG_LATITUDE).solarTermLines[0];
+    const line = buildMoonLine(HANYANG_LATITUDE, group.declination);
+    expect(line).toHaveLength(group.points.length);
+    expect(line[0].x).toBeCloseTo(group.points[0].x, 9);
+    expect(line[0].y).toBeCloseTo(group.points[0].y, 9);
+  });
+});
+
+describe("반구에서 시가 갈리는 자리", () => {
+  it("이름이 놓인 자리와 겹치지 않는다", () => {
+    for (const line of buildDialGeometry(HANYANG_LATITUDE).hourLines) {
+      expect(line.isBranchEdge && line.isMajor).toBe(false);
+    }
+  });
+
+  it("이름보다 한 시간 앞에서 그 시가 시작한다", () => {
+    const lines = buildDialGeometry(HANYANG_LATITUDE).hourLines;
+    const byMinutes = new Map(lines.map((l) => [l.apparentMinutes, l]));
+    expect(byMinutes.get(480)?.label).toBe("진");
+    expect(byMinutes.get(420)?.isBranchEdge).toBe(true);
   });
 });

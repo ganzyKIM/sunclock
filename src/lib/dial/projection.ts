@@ -118,6 +118,51 @@ export function rodShadowPoints(
   return points;
 }
 
+/**
+ * 광원이 지평선 아래에 있으면 그림자는 반구 밖으로 나간다. 그래도 그림자가
+ * 놓일 시각선은 정해져 있으므로, 영침 뿌리에서 그 시각선을 따라 테두리에
+ * 닿는 데까지만 그린다. 광원이 떠 있으면 `rodShadowPoints`와 같다.
+ *
+ * 보름달 자리가 아직 뜨지 않은 밤에 보정한 그림자를 그릴 때 쓴다. 그때도
+ * 눈금을 읽을 자리는 테두리에 걸린 그 시각선이다.
+ */
+export function rodShadowToRim(
+  latitude: number,
+  altitude: number,
+  azimuth: number,
+  headingDeg: number,
+  samples = 24
+): DialPoint[] {
+  const root = gnomonRootDirection(latitude);
+  const light = directionVector(altitude, azimuth);
+  const tip = rotateToDialFrame(
+    { x: -light.x, y: -light.y, z: -light.z },
+    headingDeg
+  );
+
+  const points: DialPoint[] = [];
+  let previous = 0;
+  for (let i = 0; i < samples; i += 1) {
+    const t = samples === 1 ? 0 : i / (samples - 1);
+    const v = slerp(root, tip, t);
+    if (v.z > 0) {
+      // 지평선을 넘었다. 넘기 직전과 사이에서 테두리에 닿는 자리를 찾는다.
+      let inside = previous;
+      let outside = t;
+      for (let step = 0; step < 24; step += 1) {
+        const middle = (inside + outside) / 2;
+        if (slerp(root, tip, middle).z > 0) outside = middle;
+        else inside = middle;
+      }
+      points.push(projectToDial(slerp(root, tip, inside)));
+      return points;
+    }
+    points.push(projectToDial(v));
+    previous = t;
+  }
+  return points;
+}
+
 export function scalePoint(point: DialPoint, radius: number): DialPoint {
   return { x: point.x * radius, y: point.y * radius };
 }

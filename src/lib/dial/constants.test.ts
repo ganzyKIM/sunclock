@@ -1,10 +1,12 @@
 import {
+  branchLabelAt,
   declinationOfSolarTerm,
   HOUR_LINE_END_MINUTES,
   HOUR_LINE_START_MINUTES,
   HOUR_LINE_STEP_MINUTES,
   majorHourLabel,
   MAJOR_HOUR_MINUTES,
+  moonHourLabel,
   OBLIQUITY,
   SOLAR_TERM_GROUPS,
   SOLAR_TERMS,
@@ -106,5 +108,39 @@ describe("시각선 상수", () => {
     expect(majorHourLabel(720)).toBe("오");
     expect(majorHourLabel(1080)).toBe("유");
     expect(majorHourLabel(390)).toBeNull();
+  });
+});
+
+describe("달시계 이름", () => {
+  it("한밤을 자시로 삼는다", () => {
+    expect(branchLabelAt(0)).toBe("자");
+    expect(branchLabelAt(720)).toBe("오");
+    expect(branchLabelAt(1440)).toBe("자");
+    expect(branchLabelAt(-120)).toBe("해");
+  });
+
+  it("해 이름에서 열두 시간 떨어진 이름을 붙인다", () => {
+    expect(moonHourLabel(720)).toBe("자");
+    expect(moonHourLabel(360)).toBe("유");
+    expect(moonHourLabel(1080)).toBe("묘");
+    expect(moonHourLabel(600)).toBe("해");
+    expect(moonHourLabel(480)).toBe("술");
+    expect(moonHourLabel(840)).toBe("축");
+    expect(moonHourLabel(960)).toBe("인");
+  });
+
+  it("주선이 아닌 자리에는 붙이지 않는다", () => {
+    expect(moonHourLabel(390)).toBeNull();
+    expect(moonHourLabel(1140)).toBeNull();
+  });
+
+  it("해와 달 이름을 합치면 열두 지지가 다 나온다", () => {
+    // 실물에는 낮 일곱뿐이다. 달 이름까지 더해야 밤 시각이 제자리를 얻는다.
+    const names = new Set<string>();
+    for (const minutes of MAJOR_HOUR_MINUTES) {
+      names.add(majorHourLabel(minutes) as string);
+      names.add(moonHourLabel(minutes) as string);
+    }
+    expect(names.size).toBe(12);
   });
 });

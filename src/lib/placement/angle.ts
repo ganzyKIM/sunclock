@@ -44,8 +44,44 @@ export function smoothAngle(previous: number | null, next: number, factor: numbe
   return normalizeDegrees(previous + angleDifference(next, previous) * factor);
 }
 
+/** 이보다 작은 변화는 떨림으로 보고 무겁게 누른다. 도 단위. */
+export const JITTER_DEGREES = 6;
+/** 떨림일 때와 진짜 돌릴 때의 따라가는 비율. */
+export const JITTER_SHARE = 0.06;
+export const TURN_SHARE = 0.3;
+
+/**
+ * 나침반 값을 누그러뜨린다.
+ *
+ * 나침반은 가만히 두어도 몇 도씩 떨린다. 그 떨림을 그대로 옮기면 바늘이
+ * 계속 움직인다. 작은 변화는 아주 천천히만 따라가고, 크게 돌릴 때는 바로
+ * 따라간다. 그래서 가만히 두면 멎고, 돌리면 곧 돈다.
+ */
+export function steadyAngle(previous: number | null, next: number): number {
+  if (previous === null) return normalizeDegrees(next);
+  const share = Math.abs(angleDifference(next, previous)) > JITTER_DEGREES ? TURN_SHARE : JITTER_SHARE;
+  return smoothAngle(previous, next, share);
+}
+
 /** 화면이 하늘을 볼 때 0도, 옆으로 세우면 90도, 엎어 놓으면 180도다. */
 export function tiltFromRotation(betaRadians: number, gammaRadians: number): number {
   const cosine = Math.cos(betaRadians) * Math.cos(gammaRadians);
   return toDegrees(Math.acos(Math.min(1, Math.max(-1, cosine))));
+}
+
+/**
+ * 지금 각도에서 목표 각도 쪽으로 정해진 비율만큼 다가간다.
+ *
+ * 0도와 360도의 경계를 가로질러도 짧은 쪽으로 돈다. 맞췄다고 본 순간
+ * 그림자가 제 눈금으로 뚝 뛰어가지 않고 스르르 미끄러져 들어가게 한다.
+ */
+export function approachAngle(current: number, target: number, share: number): number {
+  const clamped = Math.min(1, Math.max(0, share));
+  return normalizeDegrees(current + angleDifference(target, current) * clamped);
+}
+
+/** 앞은 빠르고 끝은 느리게. 자리에 닿을 때 멈추는 것처럼 보인다. */
+export function easeOutCubic(t: number): number {
+  const clamped = Math.min(1, Math.max(0, t));
+  return 1 - (1 - clamped) ** 3;
 }

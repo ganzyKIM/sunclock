@@ -1,5 +1,5 @@
 import { MoonState } from "../astro/lunar";
-import { readMoonDial } from "./moon-dial";
+import { formatMoonCorrection, readMoonDial } from "./moon-dial";
 
 function moon(overrides: Partial<MoonState>): MoonState {
   return {
@@ -77,5 +77,22 @@ describe("readMoonDial", () => {
     expect(readMoonDial(moon({ declination: 27 }), 180).beyondSolarTermLines).toBe(true);
     expect(readMoonDial(moon({ declination: -27 }), 180).beyondSolarTermLines).toBe(true);
     expect(readMoonDial(moon({ declination: 10 }), 180).beyondSolarTermLines).toBe(false);
+  });
+});
+
+describe("formatMoonCorrection", () => {
+  it("보름이면 덜 것도 더할 것도 없다", () => {
+    expect(formatMoonCorrection(0)).toBe("0분");
+    expect(formatMoonCorrection(0.4)).toBe("0분");
+  });
+
+  it("눈금이 앞서 있으면 그만큼 덜어 읽는다", () => {
+    // correctedMinutes = flippedMinutes + correctionMinutes 이므로
+    // 음수는 눈금에서 빼야 실제 시각이 된다는 뜻이다.
+    expect(formatMoonCorrection(-233)).toBe("−233분");
+  });
+
+  it("눈금이 뒤처져 있으면 그만큼 더해 읽는다", () => {
+    expect(formatMoonCorrection(128)).toBe("+128분");
   });
 });

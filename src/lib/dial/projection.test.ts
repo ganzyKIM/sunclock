@@ -1,4 +1,5 @@
 import {
+  rodShadowToRim,
   directionVector,
   gnomonRootPoint,
   isInsideBowl,
@@ -200,5 +201,34 @@ describe("horizonDirection", () => {
       const d = horizonDirection(azimuth, 17);
       expect(Math.hypot(d.x, d.y)).toBeCloseTo(1, 9);
     }
+  });
+});
+
+describe("rodShadowToRim", () => {
+  const LAT = 37.5;
+
+  it("광원이 떠 있으면 보통 그림자 띠와 같다", () => {
+    const usual = rodShadowPoints(LAT, 30, 200, 0);
+    const clipped = rodShadowToRim(LAT, 30, 200, 0);
+    expect(clipped).toHaveLength(usual.length);
+    clipped.forEach((p, i) => {
+      expect(p.x).toBeCloseTo(usual[i].x, 9);
+      expect(p.y).toBeCloseTo(usual[i].y, 9);
+    });
+  });
+
+  it("광원이 지평선 아래면 테두리에서 끊는다", () => {
+    const band = rodShadowToRim(LAT, -5, 110, 0);
+    expect(band.length).toBeGreaterThan(1);
+    const last = band[band.length - 1];
+    expect(Math.hypot(last.x, last.y)).toBeCloseTo(1, 4);
+    band.forEach((p) => expect(Math.hypot(p.x, p.y)).toBeLessThanOrEqual(1.0001));
+  });
+
+  it("테두리에 걸린 자리는 그 시각선의 방향에 있다", () => {
+    // 동남쪽 아래의 광원은 서북쪽 테두리를 가리킨다.
+    const last = rodShadowToRim(LAT, -5, 110, 0).at(-1)!;
+    expect(last.x).toBeLessThan(0);
+    expect(last.y).toBeLessThan(0);
   });
 });

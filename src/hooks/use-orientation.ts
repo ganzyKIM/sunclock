@@ -3,12 +3,11 @@ import { DeviceMotion } from "expo-sensors";
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
+import { AlignmentTrack, INITIAL_ALIGNMENT, trackAlignment } from "../lib/placement/alignment";
 import {
-  ALIGNMENT_RELEASE_DEGREES,
-  ALIGNMENT_TOLERANCE_DEGREES,
   FLAT_RELEASE_DEGREES,
   FLAT_TOLERANCE_DEGREES,
-  smoothAngle,
+  steadyAngle,
   tiltFromRotation,
 } from "../lib/placement/angle";
 
@@ -23,7 +22,6 @@ export interface OrientationState {
   compassAvailable: boolean;
 }
 
-const SMOOTHING = 0.25;
 const MOTION_INTERVAL_MS = 100;
 
 export function useOrientation(): OrientationState {
@@ -37,6 +35,8 @@ export function useOrientation(): OrientationState {
   });
 
   const smoothed = useRef<number | null>(null);
+  /** 맞았는지의 판정. 각도뿐 아니라 얼마나 머물렀는지도 본다. */
+  const alignment = useRef<AlignmentTrack>(INITIAL_ALIGNMENT);
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | undefined;
@@ -50,18 +50,20 @@ export function useOrientation(): OrientationState {
         const raw = heading.trueHeading >= 0 ? heading.trueHeading : heading.magHeading;
         if (!Number.isFinite(raw) || raw < 0) return;
 
-        smoothed.current = smoothAngle(smoothed.current, raw, SMOOTHING);
+        // 가만히 두면 멎고 돌리면 곧 도는 값. 바늘과 그림자가 이것을 따른다.
+        smoothed.current = steadyAngle(smoothed.current, raw);
         const headingDegrees = smoothed.current;
         const offset = Math.min(headingDegrees, 360 - headingDegrees);
+
+        // 각도의 여유에 더해 잠깐 머물러야 넘어간다. 경계에서 깜빡이지 않게 한다.
+        alignment.current = trackAlignment(alignment.current, offset, Date.now());
+        const isAligned = alignment.current.aligned;
 
         setState((previous) => ({
           ...previous,
           headingDegrees,
           accuracy: heading.accuracy,
-          // 한번 맞으면 조금 벗어나도 유지한다. 경계에서 깜빡이지 않게 한다.
-          isAligned: offset <= (previous.isAligned
-            ? ALIGNMENT_RELEASE_DEGREES
-            : ALIGNMENT_TOLERANCE_DEGREES),
+          isAligned,
           compassAvailable: true,
         }));
       });

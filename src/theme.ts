@@ -65,6 +65,26 @@ function channel(color: string, index: number): number {
   return parseInt(color.slice(1 + index * 2, 3 + index * 2), 16);
 }
 
+/**
+ * 색에서 채도를 뺀다. 0이면 그대로, 1이면 같은 밝기의 회색이다.
+ * 북쪽을 맞추기 전의 눈금판이 이것이다. 볕이 닿지 않은 청동처럼 가라앉아 있다.
+ */
+export function desaturate(color: string, amount: number): string {
+  const t = clamp01(amount);
+  const r = channel(color, 0);
+  const g = channel(color, 1);
+  const b = channel(color, 2);
+  const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+  const hex = (v: number) => Math.round(v + (gray - v) * t).toString(16).padStart(2, "0");
+  return `#${hex(r)}${hex(g)}${hex(b)}`;
+}
+
+/** 여섯 자리 색에 투명도를 붙여 rgba 문자열로 만든다. */
+export function withAlpha(color: string, alpha: number): string {
+  const a = Math.round(clamp01(alpha) * 1000) / 1000;
+  return `rgba(${channel(color, 0)}, ${channel(color, 1)}, ${channel(color, 2)}, ${a})`;
+}
+
 export function lerpColor(from: string, to: string, t: number): string {
   const ratio = clamp01(t);
   let result = "#";

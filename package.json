@@ -57,6 +57,9 @@
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/scripts/"
+    ],
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
     ]
   }
 }

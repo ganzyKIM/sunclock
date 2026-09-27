@@ -1,4 +1,11 @@
-import { angleDifference, normalizeDegrees, toDegrees, toRadians } from "./angle";
+import {
+  angleDifference,
+  approachAngle,
+  easeOutCubic,
+  normalizeDegrees,
+  toDegrees,
+  toRadians,
+} from "./angle";
 
 describe("normalizeDegrees", () => {
   it("0 이상 360 미만으로 접는다", () => {
@@ -26,7 +33,28 @@ describe("toRadians와 toDegrees", () => {
   });
 });
 
-import { FLAT_TOLERANCE_DEGREES, smoothAngle, tiltFromRotation } from "./angle";
+import { FLAT_TOLERANCE_DEGREES, smoothAngle, steadyAngle, tiltFromRotation } from "./angle";
+
+describe("steadyAngle", () => {
+  it("처음 값은 그대로 받는다", () => {
+    expect(steadyAngle(null, 370)).toBe(10);
+  });
+
+  it("작은 떨림은 거의 따라가지 않는다", () => {
+    const next = steadyAngle(100, 103);
+    expect(Math.abs(next - 100)).toBeLessThan(0.5);
+  });
+
+  it("크게 돌리면 바로 따라간다", () => {
+    const next = steadyAngle(100, 160);
+    expect(next - 100).toBeGreaterThan(15);
+  });
+
+  it("0도와 360도 경계를 가로질러도 짧은 쪽으로 돈다", () => {
+    const next = steadyAngle(355, 25);
+    expect(next > 355 || next < 25).toBe(true);
+  });
+});
 
 describe("smoothAngle", () => {
   it("이전 값이 없으면 새 값을 그대로 쓴다", () => {
@@ -109,5 +137,32 @@ describe("roundToStep", () => {
     for (let offset = ALIGNMENT_TOLERANCE_DEGREES + 1; offset <= 180; offset += 1) {
       expect(roundToStep(offset, GUIDE_STEP_DEGREES)).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("approachAngle", () => {
+  it("비율만큼만 다가간다", () => {
+    expect(approachAngle(0, 10, 0.5)).toBeCloseTo(5, 9);
+    expect(approachAngle(0, 10, 1)).toBeCloseTo(10, 9);
+    expect(approachAngle(0, 10, 0)).toBeCloseTo(0, 9);
+  });
+
+  it("경계를 가로질러도 짧은 쪽으로 돈다", () => {
+    // 350도에서 10도로 가는 길은 20도지 340도가 아니다.
+    expect(approachAngle(350, 10, 0.5)).toBeCloseTo(0, 9);
+    expect(approachAngle(10, 350, 0.5)).toBeCloseTo(0, 9);
+  });
+
+  it("비율이 범위를 벗어나도 넘어가지 않는다", () => {
+    expect(approachAngle(0, 10, 2)).toBeCloseTo(10, 9);
+    expect(approachAngle(0, 10, -1)).toBeCloseTo(0, 9);
+  });
+});
+
+describe("easeOutCubic", () => {
+  it("처음과 끝이 맞고 가운데는 앞서 간다", () => {
+    expect(easeOutCubic(0)).toBe(0);
+    expect(easeOutCubic(1)).toBe(1);
+    expect(easeOutCubic(0.5)).toBeGreaterThan(0.5);
   });
 });

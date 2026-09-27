@@ -12,7 +12,7 @@ from pathlib import Path
 
 __all__ = [
     "ellipse", "circle", "poly", "ribbon", "blob", "arc_stroke",
-    "contact_sheet", "BOX",
+    "contact_sheet", "spiral", "contour", "spine", "BOX",
 ]
 
 BOX = 100.0
@@ -79,6 +79,102 @@ def blob(points):
     return out + "Z"
 
 
+
+def _pt(p):
+    return (float(p[0]), float(p[1]))
+
+
+def _is_corner(p):
+    return len(p) > 2 and p[2] == "corner"
+
+
+def contour(points, tightness=6.0):
+    """점들을 지나는 매끈한 닫힌 윤곽. 한 붓으로 그린 실루엣에 쓴다.
+
+    원과 타원을 겹쳐 만든 몸은 이음매가 보여 도형 모음으로 읽힌다.
+    윤곽 하나가 코에서 등을 지나 배로 돌아오면 그림으로 읽힌다.
+
+    점은 (x, y)이거나 (x, y, "corner")다. 모서리로 표시한 점에서는 곡선이
+    꺾인다. 귀 끝, 뿔 끝, 발굽, 부리처럼 날카로워야 하는 자리에 쓴다.
+    tightness가 클수록 곡선이 점에 바짝 붙는다.
+    """
+    n = len(points)
+    if n < 3:
+        return ""
+    out = f"M{_f(points[0][0])},{_f(points[0][1])}"
+    for i in range(n):
+        p0 = _pt(points[(i - 1) % n])
+        p1 = _pt(points[i])
+        p2 = _pt(points[(i + 1) % n])
+        p3 = _pt(points[(i + 2) % n])
+        if _is_corner(points[i]):
+            c1 = p1
+        else:
+            c1 = (p1[0] + (p2[0] - p0[0]) / tightness, p1[1] + (p2[1] - p0[1]) / tightness)
+        if _is_corner(points[(i + 1) % n]):
+            c2 = p2
+        else:
+            c2 = (p2[0] - (p3[0] - p1[0]) / tightness, p2[1] - (p3[1] - p1[1]) / tightness)
+        out += (
+            f"C{_f(c1[0])},{_f(c1[1])} {_f(c2[0])},{_f(c2[1])} "
+            f"{_f(p2[0])},{_f(p2[1])}"
+        )
+    return out + "Z"
+
+
+def _spline_samples(points, per_segment=10):
+    """열린 캣멀롬 곡선을 잘게 나눠 점으로 만든다."""
+    pts = [_pt(p) for p in points]
+    n = len(pts)
+    if n < 2:
+        return pts
+    ext = [pts[0]] + pts + [pts[-1]]
+    out = []
+    for i in range(n - 1):
+        p0, p1, p2, p3 = ext[i], ext[i + 1], ext[i + 2], ext[i + 3]
+        for k in range(per_segment):
+            t = k / per_segment
+            t2, t3 = t * t, t * t * t
+            x = 0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t
+                       + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2
+                       + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3)
+            y = 0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t
+                       + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2
+                       + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+            out.append((x, y))
+    out.append(pts[-1])
+    return out
+
+
+def spine(points, widths, per_segment=10):
+    """굽이치는 몸통. 점들을 잇는 매끈한 곡선을 따라 굵기가 점마다 바뀐다.
+
+    뱀의 몸, 용의 몸, 말의 꼬리처럼 한 가닥으로 흐르는 것에 쓴다.
+    widths는 점마다의 굵기다. 사이는 고르게 이어진다.
+    """
+    if len(points) != len(widths):
+        raise ValueError("점과 굵기의 개수가 같아야 한다")
+    samples = _spline_samples(points, per_segment)
+    total = len(samples) - 1
+    seg = len(points) - 1
+
+    def width_at(idx):
+        t = idx / total * seg
+        i = min(int(t), seg - 1)
+        u = t - i
+        return widths[i] + (widths[i + 1] - widths[i]) * u
+
+    left, right = [], []
+    for idx, (x, y) in enumerate(samples):
+        before = samples[max(0, idx - 1)]
+        after = samples[min(total, idx + 1)]
+        tx, ty = _unit(after[0] - before[0], after[1] - before[1])
+        half = width_at(idx) / 2
+        left.append((x - ty * half, y + tx * half))
+        right.append((x + ty * half, y - tx * half))
+    return poly(left + right[::-1])
+
+
 def arc_stroke(cx, cy, r, start_deg, end_deg, width):
     """원호를 따라가는 굵기 일정한 띠. 코일, 테, 볏에 쓴다."""
     outer, inner = r + width / 2, r - width / 2
@@ -96,6 +192,23 @@ def arc_stroke(cx, cy, r, start_deg, end_deg, width):
     )
 
 
+def spiral(cx, cy, r0, r1, a0, a1, w0, w1, steps=64):
+    """중심으로 감겨 드는 띠. 뱀이 서린 몸이나 말린 꼬리에 쓴다.
+
+    굵기가 일정한 고리를 여러 겹 놓으면 달팽이 껍데기로 보인다.
+    반지름과 굵기가 함께 줄어야 한 가닥이 감긴 것으로 읽힌다.
+    """
+    outer, inner = [], []
+    for i in range(steps + 1):
+        t = i / steps
+        a = math.radians(a0 + (a1 - a0) * t)
+        r = r0 + (r1 - r0) * t
+        w = w0 + (w1 - w0) * t
+        outer.append((cx + (r + w / 2) * math.cos(a), cy + (r + w / 2) * math.sin(a)))
+        inner.append((cx + (r - w / 2) * math.cos(a), cy + (r - w / 2) * math.sin(a)))
+    return poly(outer + inner[::-1])
+
+
 def contact_sheet(
     figures,
     out_path,
@@ -109,19 +222,40 @@ def contact_sheet(
 ):
     """그림들을 한 장에 모은다. 아래에 작은 줄을 붙여 작을 때를 함께 본다.
 
-    figures: (이름, 경로문자열) 목록
+    figures: (이름, 그림) 목록. 그림은 경로 문자열 하나이거나,
+    여러 겹을 쌓을 때는 (경로문자열, 색) 목록이다. 겹은 순서대로 덮어 그린다.
     """
     cell, pad, small = 130, 20, 44
     rows = (len(figures) + cols - 1) // cols
     w = cols * cell + pad * 2
-    h = rows * cell + pad * 3 + small + 40
+    # 작은 줄도 폭에 맞춰 접는다. 넘치면 마지막 그림들이 잘려 시험이 안 된다.
+    per_row = max(1, (w - pad * 2) // (small + 10))
+    small_rows = (len(figures) + per_row - 1) // per_row
+    h = rows * cell + pad * 3 + small_rows * (small + 10) + 40
 
-    paint = f'fill="{fill}"'
-    if stroke:
-        paint = (
-            f'fill="none" stroke="{stroke}" stroke-width="{stroke_width}"'
-            ' stroke-linecap="round" stroke-linejoin="round"'
-        )
+    def paint_for(color):
+        if stroke:
+            return (
+                f'fill="none" stroke="{stroke}" stroke-width="{stroke_width}"'
+                ' stroke-linecap="round" stroke-linejoin="round"'
+            )
+        return f'fill="{color}"'
+
+    def layers_of(figure):
+        """한 겹짜리든 여러 겹짜리든 (경로, 색) 목록으로 펼친다."""
+        if isinstance(figure, str):
+            return [(figure, fill)]
+        out = []
+        for item in figure:
+            if isinstance(item, str):
+                out.append((item, fill))
+                continue
+            d, color = item
+            if isinstance(d, (list, tuple)):
+                out.extend((one, color) for one in d)
+            else:
+                out.append((d, color))
+        return out
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}"'
@@ -129,11 +263,12 @@ def contact_sheet(
         f'<rect width="{w}" height="{h}" fill="{background}"/>',
     ]
 
-    for i, (name, d) in enumerate(figures):
+    for i, (name, figure) in enumerate(figures):
         cx = pad + (i % cols) * cell
         cy = pad + (i // cols) * cell
         parts.append(f'<g transform="translate({cx + 15},{cy + 8})">')
-        parts.append(f'<path d="{d}" {paint}/>')
+        for d, color in layers_of(figure):
+            parts.append(f'<path d="{d}" {paint_for(color)}/>')
         parts.append("</g>")
         parts.append(
             f'<text x="{cx + 65}" y="{cy + 122}" fill="{caption}" font-size="14"'
@@ -147,13 +282,44 @@ def contact_sheet(
         f'<text x="{pad}" y="{base + 14}" fill="{caption}" font-size="12">'
         "작은 크기에서 읽히는가</text>"
     )
-    for i, (_, d) in enumerate(figures):
-        x = pad + i * (small + 10)
-        parts.append(
-            f'<g transform="translate({x},{base + 24}) scale({scale})">'
-            f'<path d="{d}" {paint}/></g>'
-        )
+    for i, (_, figure) in enumerate(figures):
+        x = pad + (i % per_row) * (small + 10)
+        y = base + 24 + (i // per_row) * (small + 10)
+        parts.append(f'<g transform="translate({x},{y}) scale({scale})">')
+        for d, color in layers_of(figure):
+            parts.append(f'<path d="{d}" {paint_for(color)}/>')
+        parts.append("</g>")
 
     parts.append("</svg>")
     Path(out_path).write_text("\n".join(parts), encoding="utf-8")
     return out_path
+
+
+def smooth(points):
+    """점들을 부드럽게 잇는 열린 곡선. 선 그림의 기본이다."""
+    if len(points) < 2:
+        return ""
+    out = f"M{_f(points[0][0])},{_f(points[0][1])}"
+    if len(points) == 2:
+        return out + f"L{_f(points[1][0])},{_f(points[1][1])}"
+    for i in range(1, len(points) - 1):
+        px, py = points[i]
+        nx, ny = points[i + 1]
+        out += f"Q{_f(px)},{_f(py)} {_f((px + nx) / 2)},{_f((py + ny) / 2)}"
+    out += f"Q{_f(points[-2][0])},{_f(points[-2][1])} {_f(points[-1][0])},{_f(points[-1][1])}"
+    return out
+
+
+def arc_open(cx, cy, r, start_deg, end_deg):
+    """열린 원호. 등, 배, 뿔, 코일에 쓴다."""
+    a0, a1 = math.radians(start_deg), math.radians(end_deg)
+    large = 1 if abs(end_deg - start_deg) > 180 else 0
+    sweep = 1 if end_deg > start_deg else 0
+    return (
+        f"M{_f(cx + r * math.cos(a0))},{_f(cy + r * math.sin(a0))}"
+        f"A{_f(r)},{_f(r)} 0 {large},{sweep} "
+        f"{_f(cx + r * math.cos(a1))},{_f(cy + r * math.sin(a1))}"
+    )
+
+
+__all__ += ["smooth", "arc_open"]

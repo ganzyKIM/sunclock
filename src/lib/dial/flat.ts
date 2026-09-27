@@ -63,8 +63,19 @@ export interface FlatHourLine {
   hourAngle: number;
   apparentMinutes: number;
   isMajor: boolean;
-  /** 주선에만 붙는 12지 이름. */
+  /** 주선에만 붙는 12지 이름. 이름은 그 시의 한가운데에 놓인다. */
   label: string | null;
+  /**
+   * 한 시가 시작하고 끝나는 자리인지.
+   *
+   * 이름은 그 시의 한가운데에 있다. 진시는 일곱 시에 시작해 아홉 시에
+   * 끝나고, 진이라는 이름은 여덟 시 자리에 놓인다. 그래서 이름만 보면
+   * 진초가 진보다 왼쪽에 오는 것이 이상해 보인다. 시가 갈리는 자리를
+   * 따로 그어 두어야 이름이 어느 구역의 것인지 눈에 보인다.
+   */
+  isBranchEdge: boolean;
+  /** 같은 선을 달시계로 읽을 때의 이름. 여섯 지지 건너뛴 자리다. */
+  moonLabel: string | null;
   /** 눈금이 그려지는 구간. 안쪽 끝과 바깥쪽 끝이다. */
   from: DialPoint;
   to: DialPoint;
@@ -111,12 +122,18 @@ function buildHourLine(minutes: number, latitude: number): FlatHourLine {
   const range = daylightRange(hourAngle, latitude);
   const branchIndex = minutes / MAJOR_STEP_MINUTES;
   const isMajor = minutes % MAJOR_STEP_MINUTES === 0;
+  // 자시가 밤 열한 시에 시작하므로 시의 경계는 한 시간 어긋난 자리다.
+  const isBranchEdge = (minutes + MAJOR_STEP_MINUTES / 2) % MAJOR_STEP_MINUTES === 0;
 
   return {
     hourAngle,
     apparentMinutes: minutes,
     isMajor,
+    isBranchEdge,
     label: isMajor ? BRANCH_NAMES[branchIndex] : null,
+    moonLabel: isMajor
+      ? BRANCH_NAMES[(branchIndex + BRANCH_NAMES.length / 2) % BRANCH_NAMES.length]
+      : null,
     from: flatPoint(hourAngle, OBLIQUITY),
     to: flatPoint(hourAngle, -OBLIQUITY),
     daylight: range
@@ -137,4 +154,55 @@ export function buildFlatGeometry(latitude: number): FlatGeometry {
   }
 
   return { latitude, termArcs, hourLines };
+}
+
+/**
+ * 눈금판은 휴대폰 화면에 붙어 있고 그림자는 세상에 붙어 있다.
+ * 그래서 휴대폰을 돌리면 눈금은 그대로고 그림자만 화면에서 돈다.
+ * 실물 앙부일구를 손에 들고 돌릴 때 일어나는 일과 같다.
+ *
+ * 북쪽을 맞췄을 때가 0도다. 그때 그림자가 제 눈금을 가리킨다.
+ */
+export function rotateFlatPoint(point: DialPoint, headingDegrees: number): DialPoint {
+  const h = toRadians(headingDegrees);
+  const cos = Math.cos(h);
+  const sin = Math.sin(h);
+  return {
+    x: point.x * cos + point.y * sin,
+    y: -point.x * sin + point.y * cos,
+  };
+}
+
+export interface FlatMoonPath {
+  declination: number;
+  /** 오늘 밤 달이 지나는 자리의 반지름. */
+  radius: number;
+  /** 달이 떠 있는 동안의 시간각 폭. 0이면 오늘 밤 뜨지 않는다. */
+  halfDayAngle: number;
+  /** 달의 적위가 해의 한계를 넘어 절기선 밖으로 나갔는지. */
+  beyondTerms: boolean;
+}
+
+/**
+ * 오늘 밤 달이 지나는 길.
+ *
+ * 밤에는 눈금판이 달시계가 된다. 해가 오늘 지나는 절기선 대신 달이 실제로
+ * 지나는 동심원 하나를 밝히고, 달이 떠 있는 동안의 시각선만 또렷하게 둔다.
+ * 그래야 눈금판이 지금 읽을 수 있는 시각을 스스로 보여 준다.
+ *
+ * 달은 해보다 남북으로 넓게 움직여 절기선 밖으로 나가는 날이 있다.
+ * 그런 날은 눈금의 끝에 붙여 두고 벗어났다는 사실만 따로 알린다.
+ */
+export function buildMoonPath(latitude: number, declination: number): FlatMoonPath {
+  return {
+    declination,
+    radius: radiusFor(declination),
+    halfDayAngle: Math.max(0, horizonHourAngle(latitude, declination)),
+    beyondTerms: Math.abs(declination) > OBLIQUITY,
+  };
+}
+
+/** 그 시각에 달이 지평선 위에 있는지. 아예 뜨지 않는 날은 언제나 거짓이다. */
+export function isMoonUp(path: FlatMoonPath, hourAngle: number): boolean {
+  return path.halfDayAngle > 0 && Math.abs(hourAngle) <= path.halfDayAngle;
 }

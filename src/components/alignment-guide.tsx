@@ -32,24 +32,24 @@ export function AlignmentGuide({
   palette,
 }: AlignmentGuideProps) {
   if (!compassAvailable) {
-    return <Hint palette={palette} text="나침반이 없어 맞춘 것으로 둡니다" />;
+    return <Hint palette={palette} text="나침반 없음 · 맞춘 것으로 본다" />;
   }
 
   if (!isFlat) {
     return (
       <Hint
         palette={palette}
-        text={`바닥에 눕혀 주세요 · ${roundToStep(tiltDegrees, 5)}도쯤 기울었어요`}
+        text={`바닥에 눕힌다 · ${roundToStep(tiltDegrees, 5)}도 기울어짐`}
       />
     );
   }
 
   if (accuracy <= LOW_ACCURACY) {
-    return <Hint palette={palette} text="나침반이 흔들려요 · 팔자로 크게 흔들어 주세요" />;
+    return <Hint palette={palette} text="나침반 흔들림 · 8자로 흔든다" />;
   }
 
   if (isAligned) {
-    return <Hint palette={palette} text="북쪽을 잘 맞췄어요" highlight />;
+    return <Hint palette={palette} text="북쪽 맞음" highlight />;
   }
 
   const offset = angleDifference(0, headingDegrees);
@@ -57,7 +57,7 @@ export function AlignmentGuide({
   // 한 도 단위로 안내하면 숫자가 떨리고 맞추기도 어렵다.
   const amount = roundToStep(Math.abs(offset), GUIDE_STEP_DEGREES);
   return (
-    <Hint palette={palette} text={`${direction}으로 ${amount}도쯤 돌려 주세요`} />
+    <Hint palette={palette} text={`${direction}으로 ${amount}도 돌린다`} />
   );
 }
 
@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     borderRadius: RADIUS.round,
     maxWidth: "100%",
+    flexShrink: 1,
   },
   text: {
     fontSize: FONT_SIZE.caption,

@@ -8,6 +8,7 @@ import {
   SOLAR_TERM_GROUPS,
   SolarTermGroup,
   majorHourLabel,
+  moonHourLabel,
 } from "./constants";
 import { DialPoint, gnomonRootPoint, shadowPoint } from "./projection";
 
@@ -36,7 +37,11 @@ export interface HourLine {
   hourAngle: number;
   apparentMinutes: number;
   isMajor: boolean;
+  /** 한 시가 시작하고 끝나는 자리인지. 이름은 그 사이의 한가운데에 놓인다. */
+  isBranchEdge: boolean;
   label: string | null;
+  /** 같은 선을 달시계로 읽을 때의 이름. 해 이름에서 열두 시간 떨어져 있다. */
+  moonLabel: string | null;
   points: DialPoint[];
 }
 
@@ -101,7 +106,9 @@ function buildHourLine(minutes: number, latitude: number): HourLine | null {
     hourAngle,
     apparentMinutes: minutes,
     isMajor: MAJOR_HOUR_MINUTES.includes(minutes),
+    isBranchEdge: (minutes + 60) % 120 === 0,
     label: majorHourLabel(minutes),
+    moonLabel: moonHourLabel(minutes),
     points,
   };
 }
@@ -155,4 +162,22 @@ export function buildDialGeometry(latitude: number): DialGeometry {
     solarTermLines,
     hourLines,
   };
+}
+
+/**
+ * 오늘 밤 달이 반구에 그리는 길.
+ *
+ * 절기선과 같은 방식으로 구한다. 다른 것은 적위뿐이다. 밤에는 이 선 하나만
+ * 밝혀 두면 달그림자가 어디를 지날지 눈금판이 스스로 보여 준다.
+ */
+export function buildMoonLine(latitude: number, declination: number): DialPoint[] {
+  const limit = horizonHourAngle(latitude, declination);
+  if (limit <= 0) return [];
+
+  const points: DialPoint[] = [];
+  for (let i = 0; i < SOLAR_TERM_SAMPLES; i += 1) {
+    const hourAngle = -limit + (2 * limit * i) / (SOLAR_TERM_SAMPLES - 1);
+    points.push(pointAt(hourAngle, declination, latitude));
+  }
+  return points;
 }

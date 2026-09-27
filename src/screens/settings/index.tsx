@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -34,7 +33,6 @@ export function SettingsScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: palette.background }]}>
-      <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
           <Text style={[styles.back, { color: palette.accent }]}>← 돌아가기</Text>
@@ -43,9 +41,8 @@ export function SettingsScreen() {
         <OptionRow
           title="눈금 보기"
           description={
-            "펼친 원반은 반구를 극축 기준으로 펴 놓은 것이에요. " +
-            "영침이 한가운데 점이 되고 그림자가 시계바늘처럼 돕니다. " +
-            "오목한 반구는 실제 유물의 모습 그대로예요."
+            "펼친 원반은 반구를 극축에서 내려다본 모양이다. " +
+            "영침이 가운데 점이 되고 그림자가 시계바늘처럼 돈다. 오목한 반구는 실물 그대로다."
           }
           options={[
             { value: "flat", label: "펼친 원반" },
@@ -59,9 +56,8 @@ export function SettingsScreen() {
         <OptionRow
           title="눈금의 위도"
           description={
-            "앙부일구는 만든 곳의 위도에 맞춰 눈금을 새겼어요. " +
-            "지금 있는 곳에 맞추면 어디서나 시각이 맞고, 한양 원본을 고르면 " +
-            "조선의 해시계를 그대로 볼 수 있어요."
+            "앙부일구는 만든 곳의 위도로 눈금을 새긴다. " +
+            "지금 있는 곳에 맞추면 어디서나 맞고, 한양 원본은 조선의 해시계 그대로다."
           }
           options={[
             { value: "device", label: "지금 있는 곳" },
@@ -75,8 +71,7 @@ export function SettingsScreen() {
         <OptionRow
           title="밤에는"
           description={
-            "해가 지면 달그림자로 시각을 읽을 수 있어요. " +
-            "달시계를 끄면 해가 뜰 때까지 남은 시간을 보여 줍니다."
+            "해가 지면 달그림자로 읽는다. 달시계를 끄면 해 뜰 때까지 남은 시간을 보인다."
           }
           options={[
             { value: "moon", label: "달시계" },
@@ -90,8 +85,8 @@ export function SettingsScreen() {
         <View style={[styles.box, { backgroundColor: palette.card }]}>
           <Text style={[styles.title, { color: palette.text }]}>위치를 손으로 정하기</Text>
           <Text style={[styles.description, { color: palette.textSoft }]}>
-            지금 위치는 북위 {location.latitude.toFixed(3)}도, 동경{" "}
-            {location.longitude.toFixed(3)}도예요.
+            지금 위치: 북위 {location.latitude.toFixed(3)}도, 동경{" "}
+            {location.longitude.toFixed(3)}도
           </Text>
           <View style={styles.inputs}>
             <TextInput
@@ -134,10 +129,9 @@ export function SettingsScreen() {
 
         {location.permission === "denied" && !settings.manualLocation ? (
           <Notice
-            title="위치를 알 수 없어요"
+            title="위치를 알 수 없다"
             body={
-              "위치 권한이 없어 경복궁을 기준으로 보여 주고 있어요. " +
-              "위에서 위도와 경도를 직접 넣으면 그곳의 해시계를 볼 수 있습니다."
+              "위치 권한이 없어 경복궁 기준으로 보인다. 위도와 경도를 직접 넣으면 그곳을 본다."
             }
             palette={palette}
           />
