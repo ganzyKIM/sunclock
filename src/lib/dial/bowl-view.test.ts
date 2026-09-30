@@ -1,6 +1,7 @@
 import {
   BOWL_PERSPECTIVE,
   BOWL_SQUASH,
+  bowlLightDirection,
   bowlOutline,
   leanBowlGeometry,
   leanBowlPoint,
@@ -90,5 +91,24 @@ describe("bowlOutline", () => {
     const widestBelow = Math.max(...outline.filter((p) => p.y > 0).map((p) => p.x));
     const widestAbove = Math.max(...outline.filter((p) => p.y < 0).map((p) => p.x));
     expect(widestBelow).toBeGreaterThan(widestAbove);
+  });
+});
+
+describe("bowlLightDirection", () => {
+  it("길이가 1이다", () => {
+    const light = bowlLightDirection(35, 120, 20);
+    expect(Math.hypot(light.x, light.y)).toBeCloseTo(1, 9);
+  });
+
+  it("동쪽 지평선의 빛은 오른쪽에 있다", () => {
+    const light = bowlLightDirection(0, 90, 0);
+    expect(light.x).toBeCloseTo(1, 9);
+    expect(light.y).toBeCloseTo(0, 9);
+  });
+
+  it("천정의 빛은 그림자에 방향이 없으므로 방위를 따른다", () => {
+    const light = bowlLightDirection(90, 90, 0);
+    expect(light.x).toBeCloseTo(1, 9);
+    expect(light.y).toBeCloseTo(0, 9);
   });
 });

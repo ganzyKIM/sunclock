@@ -1,4 +1,6 @@
 import { branchLabelAt } from "./dial/constants";
+import { bowlLightDirection, leanBowlPoint } from "./dial/bowl-view";
+import { DialPoint } from "./dial/projection";
 import { buildSundialState, solarTermNameAt } from "./sundial";
 import { toTraditionalTime } from "./time/traditional";
 
@@ -231,5 +233,71 @@ describe("보름달 자리가 뜨기 전의 보정한 그림자", () => {
     expect(state.correctedShadow).not.toBeNull();
     expect(Math.hypot(state.correctedShadow!.x, state.correctedShadow!.y)).toBeCloseTo(1, 3);
     expect(state.correctedFlatTip).not.toBeNull();
+  });
+});
+
+describe("빛과 영침과 그림자가 한 줄에 선다", () => {
+  /** 두 방향이 가운데를 사이에 두고 정반대인지. */
+  function expectOpposite(light: DialPoint, tip: DialPoint) {
+    const length = Math.hypot(tip.x, tip.y);
+    expect(length).toBeGreaterThan(0);
+    expect((light.x * tip.y - light.y * tip.x) / length).toBeCloseTo(0, 9);
+    expect(light.x * tip.x + light.y * tip.y).toBeLessThan(0);
+  }
+
+  /** 달그림자가 실제로 지는 밤. 휴대폰이 향한 방위를 바꿔 볼 수 있다. */
+  function moonShadowNight(headingDegrees: number) {
+    for (let i = 0; i < 40; i += 1) {
+      const state = buildSundialState({
+        date: new Date(Date.parse("2026-06-25T13:30:00Z") + i * 86400000),
+        latitude: SEOUL.latitude,
+        longitude: SEOUL.longitude,
+        headingDegrees,
+        nightMode: "moon",
+      });
+      if (state.mode === "moon" && state.flatTip && state.shadow) return state;
+    }
+    throw new Error("달그림자가 지는 밤을 찾지 못했다");
+  }
+
+  it("펼친 원반에서 달과 영침과 실제 달그림자가 한 줄이다", () => {
+    // 달 표시를 방위로 놓고 그림자를 시간각으로 놓으면 서로 어긋난다.
+    for (const heading of [0, 35, 250]) {
+      const state = moonShadowNight(heading);
+      expectOpposite(state.flatMoonSide, state.flatTip!);
+    }
+  });
+
+  it("펼친 원반에서 해와 영침과 해그림자가 한 줄이다", () => {
+    for (const iso of ["2026-06-21T00:30:00Z", "2026-09-30T06:40:00Z", "2026-12-21T02:10:00Z"]) {
+      for (const heading of [0, 35]) {
+        const state = stateAt(iso, heading);
+        expect(state.mode).toBe("sun");
+        expectOpposite(state.flatSunSide, state.flatTip!);
+      }
+    }
+  });
+
+  it("반구에서 달과 영침 끝과 실제 달그림자 끝이 한 줄이다", () => {
+    // 반구는 눌러서 비스듬히 보인다. 달을 누르지 않은 방위에 놓으면 몇 도 어긋난다.
+    for (const heading of [0, 35, 250]) {
+      const state = moonShadowNight(heading);
+      const moon = bowlLightDirection(
+        state.moon.position.altitude,
+        state.moon.position.azimuth,
+        heading
+      );
+      expectOpposite(moon, leanBowlPoint(state.shadow!));
+    }
+  });
+
+  it("반구에서 해와 영침 끝과 해그림자 끝이 한 줄이다", () => {
+    for (const iso of ["2026-06-21T00:30:00Z", "2026-09-30T06:40:00Z", "2026-12-21T02:10:00Z"]) {
+      for (const heading of [0, 35]) {
+        const state = stateAt(iso, heading);
+        const sun = bowlLightDirection(state.sun.altitude, state.sun.azimuth, heading);
+        expectOpposite(sun, leanBowlPoint(state.shadow!));
+      }
+    }
   });
 });

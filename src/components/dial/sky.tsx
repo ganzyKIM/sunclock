@@ -2,16 +2,21 @@ import { BlurMask, Circle, Group, Line, Path, RadialGradient, Skia, vec } from "
 import { useMemo } from "react";
 
 import { sprig } from "../../lib/art/ornament";
-import { horizonDirection } from "../../lib/dial/projection";
+import { DialPoint } from "../../lib/dial/projection";
 import { Palette, withAlpha } from "../../theme";
 
 export interface SkyContent {
   sunAltitude: number;
-  sunAzimuth: number;
   moonAltitude: number;
-  moonAzimuth: number;
+  /**
+   * 해와 달이 눈금판의 어느 쪽에 있는지. 길이가 1인 방향이다.
+   *
+   * 눈금판과 같은 방식으로 옮긴 것을 받는다. 반구는 눌러 놓은 방위를, 펼친
+   * 원반은 시간각을 따른다. 그래야 빛과 영침과 그림자가 한 줄에 선다.
+   */
+  sun: DialPoint;
+  moon: DialPoint;
   moonFraction: number;
-  heading: number;
   night: boolean;
   /** 북쪽을 맞춘 정도. 0이면 아니고 1이면 맞았다. 사이는 옮겨 가는 중이다. */
   lit: number;
@@ -48,7 +53,8 @@ const DOT_STEP = 6;
 const SPRIG_SIZE = 0.62;
 
 /**
- * 해와 달을 실제 방위에 맞춰 반구 바깥에 띄운다. 그림자가 왜 저쪽으로 뻗는지 보인다.
+ * 해와 달을 눈금판 바깥에 띄운다. 영침을 사이에 두고 그림자의 정반대에 놓여
+ * 그림자가 왜 저쪽으로 뻗는지 보인다.
  *
  * 북쪽을 맞추면 하늘이 답한다. 눈금판 둘레에 빛이 고이고, 낮에는 해에서
  * 햇살이 뻗고 꽃잎이 떠다니며, 밤에는 별이 또렷해져 저마다의 박자로
@@ -57,11 +63,10 @@ const SPRIG_SIZE = 0.62;
  */
 export function Sky({
   sunAltitude,
-  sunAzimuth,
   moonAltitude,
-  moonAzimuth,
+  sun,
+  moon,
   moonFraction,
-  heading,
   radius,
   palette,
   night,
@@ -134,8 +139,6 @@ export function Sky({
   const half = radius / 0.69;
   const sprigScale = (radius * SPRIG_SIZE) / 100;
 
-  const sun = horizonDirection(sunAzimuth, heading);
-  const moon = horizonDirection(moonAzimuth, heading);
   const sunSize = radius * Math.min(MARK_MAX, 0.045 + Math.max(0, sunAltitude) / 1500);
   const moonSize = radius * Math.min(MARK_MAX * 0.85, 0.035 + Math.max(0, moonAltitude) / 1800);
   const pool = night ? palette.accent : palette.glow;

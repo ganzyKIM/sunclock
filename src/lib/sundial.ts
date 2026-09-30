@@ -9,7 +9,7 @@ import {
   sunPosition,
 } from "./astro/solar";
 import { SOLAR_TERMS } from "./dial/constants";
-import { flatPoint, rotateFlatPoint } from "./dial/flat";
+import { flatLightDirection, flatPoint, rotateFlatPoint } from "./dial/flat";
 import { DialPoint, rodShadowToRim, shadowPoint } from "./dial/projection";
 import { angleDifference, normalizeDegrees } from "./placement/angle";
 import {
@@ -55,6 +55,13 @@ export interface SundialState {
   correctedFlatTip: DialPoint | null;
   /** 보정한 그림자를 드리우는 가상의 광원, 곧 보름달이 있을 자리. */
   correctedLight: HorizontalPosition | null;
+  /**
+   * 펼친 원반에서 해와 달이 놓이는 쪽. 길이가 1인 방향이다.
+   * 원반과 같은 방식으로 옮긴 것이라 영침을 사이에 두고 제 그림자의 정반대다.
+   * 반구에서는 쓰지 않는다. 반구는 눌러 놓은 방위를 따른다(`bowlLightDirection`).
+   */
+  flatSunSide: DialPoint;
+  flatMoonSide: DialPoint;
   apparentMinutes: number;
   standardMinutes: number;
   traditional: TraditionalTime;
@@ -159,6 +166,8 @@ export function buildSundialState(input: SundialInput): SundialState {
     correctedShadow,
     correctedFlatTip,
     correctedLight,
+    flatSunSide: flatLightDirection(hourAngle(date, longitude), headingDegrees),
+    flatMoonSide: flatLightDirection(moon.hourAngle, headingDegrees),
     apparentMinutes,
     standardMinutes: standardMinutesFromApparent(
       apparentMinutes,

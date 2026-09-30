@@ -173,6 +173,19 @@ export function rotateFlatPoint(point: DialPoint, headingDegrees: number): DialP
   };
 }
 
+/**
+ * 펼친 원반에서 빛이 놓이는 쪽. 길이가 1인 방향이다.
+ *
+ * 원반은 극축에서 내려다본 모습이라 그림자가 시간각을 따라 돈다. 해와 달을
+ * 지평선의 방위로 놓으면 다른 방식으로 옮긴 것이 되어 그림자와 어긋난다.
+ * 같은 방식으로 옮기면 빛은 영침을 사이에 두고 그림자의 정반대에 놓인다.
+ * 그래야 빛과 영침과 그림자가 한 줄에 서고, 그림자가 왜 그쪽으로 뻗는지 보인다.
+ */
+export function flatLightDirection(hourAngle: number, headingDegrees: number): DialPoint {
+  const a = toRadians(hourAngle);
+  return rotateFlatPoint({ x: -Math.sin(a), y: Math.cos(a) }, headingDegrees);
+}
+
 export interface FlatMoonPath {
   declination: number;
   /** 오늘 밤 달이 지나는 자리의 반지름. */

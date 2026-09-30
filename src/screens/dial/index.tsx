@@ -22,6 +22,7 @@ import { useNow } from "../../hooks/use-now";
 import { useOrientation } from "../../hooks/use-orientation";
 import { useSettings } from "../../hooks/use-settings";
 import { useWidgetPlace } from "../../hooks/use-widget-place";
+import { bowlLightDirection } from "../../lib/dial/bowl-view";
 import { buildMoonPath } from "../../lib/dial/flat";
 import { buildMoonLine } from "../../lib/dial/geometry";
 import { rodShadowPoints, rodShadowToRim } from "../../lib/dial/projection";
@@ -169,13 +170,21 @@ export function DialScreen() {
       ? buildMoonLine(dialLatitude, state.moon.declination)
       : [];
 
+  /**
+   * 해와 달은 눈금판과 같은 방식으로 옮겨 놓는다. 반구는 눌러 놓은 방위를,
+   * 펼친 원반은 시간각을 따른다. 달리 옮기면 빛과 영침과 그림자가 어긋난다.
+   */
+  const bowlView = settings.dialView === "bowl";
   const sky = {
     sunAltitude: state.sun.altitude,
-    sunAzimuth: state.sun.azimuth,
     moonAltitude: state.moon.position.altitude,
-    moonAzimuth: state.moon.position.azimuth,
+    sun: bowlView
+      ? bowlLightDirection(state.sun.altitude, state.sun.azimuth, heading)
+      : state.flatSunSide,
+    moon: bowlView
+      ? bowlLightDirection(state.moon.position.altitude, state.moon.position.azimuth, heading)
+      : state.flatMoonSide,
     moonFraction: state.moon.illuminatedFraction,
-    heading,
     night: state.mode !== "sun",
     lit,
     twinkle,

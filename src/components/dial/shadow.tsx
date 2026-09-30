@@ -12,11 +12,15 @@ interface ShadowProps {
   palette: Palette;
   glowing: boolean;
   /**
-   * 뒤에 흐리게 깔리는 그림자인지. 밤에 달이 실제로 드리운 그림자가 이것이다.
-   * 보정한 그림자가 앞에 또렷하게 서므로 이쪽은 있는 줄만 알도록 둔다.
+   * 뒤에 깔리는 그림자인지. 밤에 달이 실제로 드리운 그림자가 이것이다.
+   * 달과 영침 끝과 한 줄에 선다. 보정한 그림자가 앞에 빛무리를 달고 서므로
+   * 이쪽은 끝에 빈 고리만 둘러 어디에 졌는지 보이게 한다.
    */
   ghost?: boolean;
 }
+
+/** 실제 달그림자 끝에 두르는 고리의 크기. 보정한 그림자의 빛무리보다 작다. */
+const GHOST_RING = 0.04;
 
 /** 영침은 뿌리가 굵고 끝이 뾰족하다. 그 그림자도 같은 만큼 좁아진다. */
 const UMBRA_ROOT = 0.045;
@@ -53,18 +57,28 @@ export function Shadow({
   if (ghost) {
     return (
       <>
-        <Path path={bands.penumbra} color={palette.shadow} opacity={0.15}>
-          <BlurMask blur={radius * 0.045} style="normal" />
+        <Path path={bands.penumbra} color={palette.shadow} opacity={0.16}>
+          <BlurMask blur={radius * 0.04} style="normal" />
         </Path>
-        <Path path={bands.umbra} color={palette.shadow} opacity={0.42}>
-          <BlurMask blur={radius * 0.02} style="normal" />
+        <Path path={bands.umbra} color={palette.shadow} opacity={0.5}>
+          <BlurMask blur={radius * 0.012} style="normal" />
         </Path>
+        {/* 밤의 그릇은 어두워 그림자만으로는 묻힌다. 끝에 빈 고리를 둘러 자리를 알린다. */}
         <Circle
           cx={tip.x * radius}
           cy={tip.y * radius}
-          r={radius * 0.02}
+          r={radius * GHOST_RING}
+          style="stroke"
+          strokeWidth={radius * 0.011}
+          color={palette.star}
+          opacity={0.7}
+        />
+        <Circle
+          cx={tip.x * radius}
+          cy={tip.y * radius}
+          r={radius * 0.016}
           color={palette.shadow}
-          opacity={0.55}
+          opacity={0.85}
         />
       </>
     );

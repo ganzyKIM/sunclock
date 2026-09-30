@@ -1,6 +1,7 @@
 import { HANYANG_LATITUDE } from "./geometry";
 import {
   buildFlatGeometry,
+  flatLightDirection,
   flatPoint,
   INNER_RADIUS,
   OUTER_RADIUS,
@@ -287,5 +288,32 @@ describe("시가 갈리는 자리", () => {
     expect(dragonName?.label).toBe("진");
     expect(dragonStart?.isBranchEdge).toBe(true);
     expect(dragonStart?.label).toBeNull();
+  });
+});
+
+describe("빛이 놓이는 쪽", () => {
+  it("영침을 사이에 두고 그림자의 정반대다", () => {
+    // 빛과 영침과 그림자 끝이 한 줄에 서야 그림자가 왜 그쪽으로 뻗는지 보인다.
+    for (const hourAngle of [-100, -45, 0, 30, 75]) {
+      for (const declination of [-28, -10, 0, 23]) {
+        for (const heading of [0, 40, 200]) {
+          const tip = rotateFlatPoint(flatPoint(hourAngle, declination), heading);
+          const light = flatLightDirection(hourAngle, heading);
+          expect(light.x * tip.y - light.y * tip.x).toBeCloseTo(0, 9);
+          expect(light.x * tip.x + light.y * tip.y).toBeLessThan(0);
+        }
+      }
+    }
+  });
+
+  it("길이가 1이다", () => {
+    const light = flatLightDirection(63, 17);
+    expect(Math.hypot(light.x, light.y)).toBeCloseTo(1, 9);
+  });
+
+  it("남중한 빛은 아래쪽, 곧 남쪽에 있다", () => {
+    const light = flatLightDirection(0, 0);
+    expect(light.x).toBeCloseTo(0, 9);
+    expect(light.y).toBeCloseTo(1, 9);
   });
 });

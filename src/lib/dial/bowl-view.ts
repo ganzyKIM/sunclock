@@ -1,5 +1,5 @@
 import { CurvePoint, DialGeometry } from "./geometry";
-import { DialPoint } from "./projection";
+import { DialPoint, horizonDirection, shadowPoint } from "./projection";
 
 /**
  * 오목한 반구를 어떻게 화면에 놓고 볼지 정한다.
@@ -28,6 +28,25 @@ export function leanBowlPoint(point: DialPoint): DialPoint {
     x: point.x * (1 + BOWL_PERSPECTIVE * point.y),
     y: point.y * BOWL_SQUASH,
   };
+}
+
+/**
+ * 눌러 놓은 그릇에서 빛이 놓이는 쪽. 길이가 1인 방향이다.
+ *
+ * 그림자 끝은 그릇과 함께 눌린다. 해와 달을 누르지 않은 방위에 놓으면 빛과
+ * 영침 끝과 그림자 끝이 몇 도 어긋난다. 눌린 그림자 끝의 정반대에 놓아야
+ * 셋이 한 줄에 서고, 그림자가 왜 그쪽으로 뻗는지 보인다.
+ */
+export function bowlLightDirection(
+  altitude: number,
+  azimuth: number,
+  headingDeg: number
+): DialPoint {
+  const tip = leanBowlPoint(shadowPoint(altitude, azimuth, headingDeg));
+  const length = Math.hypot(tip.x, tip.y);
+  // 천정의 빛은 그림자가 영침 끝 바로 아래라 방향이 없다. 방위로 대신한다.
+  if (length < 1e-9) return horizonDirection(azimuth, headingDeg);
+  return { x: -tip.x / length, y: -tip.y / length };
 }
 
 function leanCurvePoint(point: CurvePoint): CurvePoint {
