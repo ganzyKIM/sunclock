@@ -1,0 +1,50 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!-- 홈 화면과 잠금 화면에 놓는 눈금판. 5분마다의 알람도 여기서 받는다. -->
+    <receiver
+      android:name="com.dobedub.angbuilgu.widget.DialWidgetProvider"
+      android:exported="true"
+      android:label="@string/angbuilgu_widget_small_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="android.intent.action.TIME_SET" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/angbuilgu_widget_small" />
+    </receiver>
+
+    <receiver
+      android:name="com.dobedub.angbuilgu.widget.WideDialWidgetProvider"
+      android:exported="true"
+      android:label="@string/angbuilgu_widget_wide_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/angbuilgu_widget_wide" />
+    </receiver>
+
+    <!-- 그림을 뽑는 도구. 밖에서는 부를 수 없다. -->
+    <receiver
+      android:name="com.dobedub.angbuilgu.widget.PreviewReceiver"
+      android:exported="false" />
+
+    <!-- 대기화면. 설정의 화면 보호기에서 고른다. -->
+    <service
+      android:name="com.dobedub.angbuilgu.widget.StandbyDream"
+      android:exported="true"
+      android:label="@string/angbuilgu_standby_label"
+      android:permission="android.permission.BIND_DREAM_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.dreams.DreamService" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+      <meta-data
+        android:name="android.service.dream"
+        android:resource="@xml/angbuilgu_standby" />
+    </service>
+  </application>
+</manifest>

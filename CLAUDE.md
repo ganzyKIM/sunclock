@@ -70,6 +70,27 @@
   있다. 모두 옅고 가늘다. 더 보태고 싶으면 먼저 하나를 빼라.
 - 밤빛과 낮빛 사이는 노을빛(`DUSK_PALETTE`)을 지난다. 곧장 섞으면 잿빛이 된다.
 
+## 위젯과 대기화면
+
+- 안드로이드에만 있다. `modules/angbuilgu-widget`의 코틀린이 셈하고 그린다. JS를
+  깨우지 않는다. 설계는 `docs/superpowers/specs/2026-09-30-widget-standby-design.md`에 있다.
+- 셈이 두 벌이다. 기준은 `src/lib/widget/moment.ts`고, 코틀린의 `Almanac`과
+  `DialPalette`는 따라 적은 것이다. `src/lib`의 계산이나 `theme.ts`의 색을 고치면
+  `vectors.test.ts`가 깨진다. 그때 기준값을 다시 뽑고 코틀린을 맞춘 뒤 코틀린 시험을 돌린다.
+- 위젯은 언제나 북쪽을 맞춘 모습이다. 밤에는 실제 달이 아니라 보름달 자리의 그림자를
+  세운다. 시계는 달이 졌다고 멈출 수 없다.
+- 위젯은 위치를 묻지 않는다. 앱이 `useWidgetPlace`로 건넨 마지막 자리를 쓴다.
+- 작을수록 덜 그린다. 모양은 `WidgetRenderer.shapeFor`가, 눈금의 자세함은
+  `DialPainter.detailFor`가 정한다.
+- 런처가 알려 주는 높이는 실제보다 크다. `HEIGHT_TRUST`만큼만 믿는다. 그대로 믿으면
+  맞는 크기가 없다고 보고 엉뚱한 쪽의 모양을 고른다.
+- 눈금판 옆에 글이 놓이는 모양은 눈금판을 그려 준 크기 그대로 둔다. 높이에 맞춰
+  키우면 글이 밀려나 잘린다.
+- 대기화면은 바탕이 언제나 어둡다. 눈금판 밖의 고리와 이름은 `OutsideInk`로 밝게 쓴다.
+- 위젯 고르는 화면의 그림은 `./scripts/render-widget-previews.sh bundle`이 뽑는다.
+  `drawable-nodpi`의 png를 손으로 고치지 않는다.
+- 스토어에 올리는 차례는 `docs/superpowers/plans/2026-09-30-play-store-release.md`에 있다.
+
 ## 그림
 
 - 아이콘과 스플래시는 `scripts/render_art.py`가 그린다. `assets`의 png를 직접
@@ -107,6 +128,13 @@ npm run typecheck
 npx expo start --web
 npm run render-art
 ./scripts/setup-emulator.sh install
+
+# 위젯의 코틀린 셈이 앱과 같은지 본다. 자바와 SDK 경로를 먼저 준다.
+cd android && ./gradlew :angbuilgu-widget:testDebugUnitTest
+# 앱의 계산을 고친 뒤 기준값을 다시 뽑는다.
+UPDATE_WIDGET_VECTORS=1 npx jest src/lib/widget
+# 위젯과 대기화면을 에뮬레이터에서 그려 widget-preview/에 받는다.
+./scripts/render-widget-previews.sh
 ```
 
 에뮬레이터는 안드로이드 36 arm64 이미지를 쓴다. 가상 기기 이름은

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯의 바탕. 흰 판에 그때의 빛깔을 입혀 쓴다. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+  <corners android:radius="24dp" />
+  <solid android:color="#ffffff" />
+</shape>

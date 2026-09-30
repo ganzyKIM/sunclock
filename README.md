@@ -29,6 +29,8 @@
 - 전통 시각(96각법), 진태양시, 표준시를 함께 보여 준다
 - 밤에는 달그림자로 시각을 읽는다. 보름달을 기준으로 12시간을 뒤집고 달의 나이만큼 보정한다
 - 눈금과 용어를 누르면 설명이 열린다
+- 안드로이드 홈 화면과 잠금 화면에 놓는 위젯. 작게 줄이면 눈금판과 시각만 남는다
+- 충전하는 동안 화면을 눈금판으로 채우는 대기화면
 
 ## 실행
 
@@ -79,6 +81,29 @@ AVD=angbuilgu_galaxy ./scripts/setup-emulator.sh
 웹으로 보려면 `npx expo start --web`을 쓴다. 웹에서는 스킨이 쓰는 그래픽 엔진을
 `public/canvaskit.wasm`에서 내려받는다.
 
+## 위젯과 대기화면
+
+안드로이드에만 있다. 설정 화면에서 위젯을 놓고 화면 보호기 설정을 연다.
+
+위젯은 앱을 깨우지 않는다. `modules/angbuilgu-widget`의 코틀린이 해 위치를 셈하고
+눈금판을 그린다. 시계 숫자는 시스템이 넘기고, 눈금판은 5분마다 다시 그린다.
+나침반을 읽지 못하므로 언제나 북쪽을 맞춘 모습이고, 밤에는 보름달 자리의 그림자가
+실제 시각을 가리킨다. 위치는 앱을 마지막으로 연 곳을 쓴다.
+
+셈이 앱과 코틀린에 두 벌 있다. 앱 쪽이 뽑아 둔 기준값을 코틀린 시험이 읽어 같은 값을
+내는지 본다.
+
+```bash
+cd android && ./gradlew :angbuilgu-widget:testDebugUnitTest
+```
+
+크기마다의 모양은 에뮬레이터에서 그려 눈으로 본다.
+
+```bash
+./scripts/render-widget-previews.sh            # widget-preview/에 받는다
+./scripts/render-widget-previews.sh bundle     # 위젯 고르는 화면의 그림까지 갈아 끼운다
+```
+
 ## 아이콘과 스플래시
 
 `scripts/render_art.py`가 그린다. 눈금 좌표는 앱의 계산 코드에서 뽑은 것을
@@ -102,7 +127,10 @@ src/
     dial/       24절기 상수, 투영, 눈금 기하
     time/       96각법, 표준시, 달시계 읽기
     placement/  각도와 평활
+    widget/     위젯이 보여 줄 순간. 코틀린의 기준이다
   theme.ts      해 높이에 따라 물드는 색
+modules/
+  angbuilgu-widget/   안드로이드 위젯과 대기화면. 코틀린으로 셈하고 그린다
 ```
 
 ## 눈금이 맞는지
@@ -121,6 +149,8 @@ src/
 
 - 기획서: `docs/superpowers/specs/2026-09-18-angbuilgu-app-design.md`
 - 구현 계획: `docs/superpowers/plans/2026-09-18-angbuilgu-app.md`
+- 위젯과 대기화면 설계: `docs/superpowers/specs/2026-09-30-widget-standby-design.md`
+- 구글 플레이 출시 계획: `docs/superpowers/plans/2026-09-30-play-store-release.md`
 
 ## 참고
 

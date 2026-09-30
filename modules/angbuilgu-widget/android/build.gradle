@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.dobedub.angbuilgu.widget'
+version = '1.0.0'
+
+android {
+  namespace "com.dobedub.angbuilgu.widget"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  testImplementation 'junit:junit:4.13.2'
+}

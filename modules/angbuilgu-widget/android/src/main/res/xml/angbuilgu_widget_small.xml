@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 두 칸 네모로 놓인다. 어느 쪽으로든 늘이고 줄일 수 있고, 크기에 따라 모양이 바뀐다. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/angbuilgu_widget_small_description"
+  android:initialKeyguardLayout="@layout/angbuilgu_widget_small"
+  android:initialLayout="@layout/angbuilgu_widget_small"
+  android:previewImage="@drawable/angbuilgu_widget_preview_small"
+  android:minHeight="110dp"
+  android:minResizeHeight="48dp"
+  android:minResizeWidth="80dp"
+  android:minWidth="110dp"
+  android:resizeMode="horizontal|vertical"
+  android:targetCellHeight="2"
+  android:targetCellWidth="2"
+  android:updatePeriodMillis="1800000"
+  android:widgetCategory="home_screen|keyguard" />

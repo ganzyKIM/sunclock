@@ -44,3 +44,5 @@ dial-geometry.json
 /android
 /ios
 __pycache__/
+widget-preview/
+modules/*/android/build/

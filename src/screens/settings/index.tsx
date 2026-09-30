@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Notice } from "../../components/notice";
 import { OptionRow } from "../../components/option-row";
+import { WidgetSettings } from "../../components/widget-settings";
 import { useLocation } from "../../hooks/use-location";
 import { useSettings } from "../../hooks/use-settings";
 import { Settings } from "../../lib/settings";
@@ -81,6 +82,8 @@ export function SettingsScreen() {
           onChange={(value) => update({ nightMode: value as Settings["nightMode"] })}
           palette={palette}
         />
+
+        <WidgetSettings palette={palette} />
 
         <View style={[styles.box, { backgroundColor: palette.card }]}>
           <Text style={[styles.title, { color: palette.text }]}>위치를 손으로 정하기</Text>

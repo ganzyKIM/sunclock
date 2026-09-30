@@ -21,6 +21,7 @@ import { useLocation } from "../../hooks/use-location";
 import { useNow } from "../../hooks/use-now";
 import { useOrientation } from "../../hooks/use-orientation";
 import { useSettings } from "../../hooks/use-settings";
+import { useWidgetPlace } from "../../hooks/use-widget-place";
 import { buildMoonPath } from "../../lib/dial/flat";
 import { buildMoonLine } from "../../lib/dial/geometry";
 import { rodShadowPoints, rodShadowToRim } from "../../lib/dial/projection";
@@ -48,6 +49,7 @@ export function DialScreen() {
   const now = useNow();
   const { settings } = useSettings();
   const location = useLocation(settings.manualLocation);
+  useWidgetPlace(location);
   const orientation = useOrientation();
   /** 눈금판에서 누른 12지 이름. 아무것도 누르지 않았으면 null이다. */
   const [openBranch, setOpenBranch] = useState<string | null>(null);

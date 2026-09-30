@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 따로 고를 설정이 없는 화면 보호기다. 고르는 화면에는 이 그림이 뜬다. -->
+<dream xmlns:android="http://schemas.android.com/apk/res/android"
+  android:previewImage="@drawable/angbuilgu_standby_preview" />

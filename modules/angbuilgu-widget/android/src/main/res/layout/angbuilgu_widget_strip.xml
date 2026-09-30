@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 한 줄 높이의 위젯. 눈금판 옆에 시 이름과 시계 숫자를 둔다. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@android:id/background"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+  <ImageView
+    android:id="@+id/angbuilgu_bg"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:importantForAccessibility="no"
+    android:scaleType="fitXY"
+    android:src="@drawable/angbuilgu_widget_bg" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:padding="6dp">
+
+    <!-- 눈금판은 그려 준 크기 그대로 놓는다. 높이에 맞춰 키우면 옆의 글이 밀려난다. -->
+    <ImageView
+      android:id="@+id/angbuilgu_dial"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:scaleType="fitCenter" />
+
+    <LinearLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="10dp"
+      android:orientation="vertical">
+
+      <TextView
+        android:id="@+id/angbuilgu_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+      <TextClock
+        android:id="@+id/angbuilgu_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        android:textSize="13sp" />
+    </LinearLayout>
+  </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,10 @@
+<resources>
+  <string name="angbuilgu_widget_small_label">앙부일구 작게</string>
+  <string name="angbuilgu_widget_wide_label">앙부일구 넓게</string>
+  <string name="angbuilgu_widget_small_description">눈금판과 지금의 시. 줄이면 시계만 남는다.</string>
+  <string name="angbuilgu_widget_wide_description">눈금판 옆에 시와 각, 절기를 적는다.</string>
+  <string name="angbuilgu_widget_reading">앙부일구. 지금은 %1$s.</string>
+  <string name="angbuilgu_widget_term">%1$s 무렵</string>
+  <string name="angbuilgu_standby_label">앙부일구</string>
+  <string name="angbuilgu_standby_foot">%1$s 무렵 · %2$s</string>
+</resources>
