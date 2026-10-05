@@ -39,10 +39,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# 미리보기 산출물
 dial-preview/
 dial-geometry.json
-/android
-/ios
-__pycache__/
 widget-preview/
+__pycache__/
 modules/*/android/build/
